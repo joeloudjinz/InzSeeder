@@ -33,24 +33,12 @@ public class Program
 
             builder.UseContentRoot(Directory.GetCurrentDirectory());
 
-            // Set the environment for the host. This is crucial for loading the correct appsettings.{Environment}.json.
+            // Set the environment for the host.
             builder.UseEnvironment(EnvironmentUtility.Environment());
 
-            builder.ConfigureAppConfiguration((hostContext, config) =>
+            builder.ConfigureAppConfiguration((_, config) =>
             {
-                // We manually replicate the standard configuration setup here.
-                config.AddJsonFile("appsettings.json", optional: true);
-
-                // The hostContext.HostingEnvironment.EnvironmentName is the 'environment' we just set.
-                config.AddJsonFile($"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", optional: true);
-
-                // Add User Secrets, especially for local development with secrets.
-                config.AddUserSecrets<Program>();
-
-                // Environment variables override appsettings files.
                 config.AddEnvironmentVariables();
-
-                // Command-line arguments override everything. This allows for runtime overrides of any config value.
                 config.AddCommandLine(args);
             });
 
@@ -96,8 +84,9 @@ public class Program
             return result ? 0 : 1;
         }
 
-        var configuration = services.GetRequiredService<IConfiguration>(); // Settings configuration is not found!!
-        var settings = configuration.GetSection(SeedingSettings.SectionName).Get<SeedingSettings>() ?? new SeedingSettings();
+        var configuration = services.GetRequiredService<IConfiguration>();
+        // Try to get settings from configuration, but it's not required since we're using external configuration
+        var settings = configuration.GetSection(SeederConfiguration.SectionName).Get<SeederConfiguration>() ?? new SeederConfiguration();
         if (commandLineArgs.Preview)
         {
             var previewService = services.GetRequiredService<ExecutionPlanPreviewService>();
@@ -131,7 +120,8 @@ public class Program
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        // Register seeder services using the extension method
+        // Register seeder services using the extension method with default settings
+        // Users can provide their own settings when calling AddInzSeeder in their applications
         services.AddInzSeeder();
     }
 }

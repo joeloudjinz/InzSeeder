@@ -28,7 +28,7 @@ public class ExecutionPlanPreviewService
     /// </summary>
     /// <param name="settings">The seeding settings to use for the preview.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
-    public async Task ShowPreviewAsync(SeedingSettings settings, CancellationToken cancellationToken)
+    public async Task ShowPreviewAsync(SeederConfiguration settings, CancellationToken cancellationToken)
     {
         Console.WriteLine("Seeder Execution Plan Preview");
         Console.WriteLine("=============================");
@@ -86,7 +86,7 @@ public class ExecutionPlanPreviewService
     /// </summary>
     /// <param name="settings">The seeding settings.</param>
     /// <returns>The seeding profile, or null if not found.</returns>
-    private SeedingProfile GetProfileForEnvironment(SeedingSettings settings)
+    private SeedingProfile GetProfileForEnvironment(SeederConfiguration settings)
     {
         settings.Profiles.TryGetValue(EnvironmentUtility.Environment(), out var profile);
         return profile ?? throw new Exception($"Environment [{EnvironmentUtility.Environment()}] profile is not defined the corresponding settings file.");

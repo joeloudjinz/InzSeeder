@@ -1,7 +1,8 @@
 using InzSeeder.Core.Contracts;
 using InzSeeder.Core.Extensions;
+using InzSeeder.Core.Models;
+using InzSeeder.Core.Utilities;
 using InzSeeder.Samples.InMemory.Data;
-using InzSeeder.Samples.InMemory.Seeders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -18,14 +19,35 @@ class Program
         builder.Services.AddDbContext<AppDbContext>(options =>
         {
             // Using in-memory database for this example
-            options.UseInMemoryDatabase("SampleDb");
+            options.UseInMemoryDatabase("SampleDb")
+                   .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning));
         });
 
-        // Add the seeder services
-        builder.Services.AddInzSeeder();
+        // Create seeding settings
+        var seedingSettings = new SeederConfiguration
+        {
+            Environment = "Development",
+            Profiles = new Dictionary<string, SeedingProfile>
+            {
+                ["Development"] = new()
+                {
+                    EnabledSeeders = ["products"],
+                    StrictMode = false
+                }
+            },
+            BatchSettings = new SeederBatchSettings
+            {
+                DefaultBatchSize = 100
+            }
+        };
 
-        // Register our custom seeder
-        builder.Services.AddScoped<IEntitySeeder, ProductSeeder>();
+        // Determine environment
+        EnvironmentUtility.DetermineEnvironment("Development");
+
+        // Add the seeder services with external configuration using fluent API
+        builder.Services.AddInzSeeder(seedingSettings)
+            .UseDbContext<AppDbContext>()
+            .RegisterEntitySeedersFromAssemblies();
 
         var host = builder.Build();
 

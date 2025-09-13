@@ -3,7 +3,7 @@ namespace InzSeeder.Core.Models;
 /// <summary>
 /// Configuration settings for data provisioning.
 /// </summary>
-public class SeedingSettings
+public class SeederConfiguration
 {
     /// <summary>
     /// The configuration section name.

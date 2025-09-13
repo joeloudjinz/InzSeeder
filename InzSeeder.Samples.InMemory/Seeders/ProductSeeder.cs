@@ -13,7 +13,7 @@ public class ProductSeeder : BaseEntitySeeder<Product, ProductSeedModel>
         ISeedDataProvider seedDataProvider,
         ISeederDbContext dbContext,
         ILogger<ProductSeeder> logger,
-        SeedingSettings? seedingSettings = null,
+        SeederConfiguration? seedingSettings = null,
         SeedingPerformanceMetricsService? performanceMetricsService = null
     ) : base(seedDataProvider, dbContext, logger, seedingSettings, performanceMetricsService)
     {

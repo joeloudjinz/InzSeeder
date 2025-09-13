@@ -64,7 +64,7 @@ public static class EnvironmentUtility
     /// </summary>
     /// <param name="settings">The seeding settings to validate.</param>
     /// <returns>True if the configuration is valid, false otherwise.</returns>
-    public static bool ValidateConfiguration(SeedingSettings? settings)
+    public static bool ValidateConfiguration(SeederConfiguration? settings)
     {
         if (settings == null)
         {

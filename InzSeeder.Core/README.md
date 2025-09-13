@@ -1,6 +1,6 @@
-# Inz.Seeder
+# InzSeeder
 
-Inz.Seeder is a flexible, generic data seeding library for .NET applications that can be used to seed any database with initial data.
+InzSeeder is a flexible, generic data seeding library for .NET applications that can be used to seed any database with initial data.
 
 ## Features
 
@@ -16,10 +16,10 @@ Inz.Seeder is a flexible, generic data seeding library for .NET applications tha
 
 ## Installation
 
-Add the Inz.Seeder NuGet package to your project:
+Add the InzSeeder NuGet package to your project:
 
 ```bash
-dotnet add package Inz.Seeder
+dotnet add package InzSeeder
 ```
 
 ## Quick Start
@@ -53,16 +53,34 @@ public class ProductSeeder : BaseEntitySeeder<Product, ProductSeedModel>
 }
 ```
 
-2. Register the seeder in your application:
+2. Register the seeder in your application with configuration using the fluent API:
 
 ```csharp
-services.AddSeeder<YourDbContext>((options) =>
+// Create seeding settings
+var seedingSettings = new SeedingSettings
 {
-    options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
-});
+    Environment = "Development",
+    Profiles = new Dictionary<string, SeedingProfile>
+    {
+        ["Development"] = new SeedingProfile
+        {
+            EnabledSeeders = ["products", "users", "roles"],
+            StrictMode = false
+        }
+    },
+    BatchSettings = new SeederBatchSettings
+    {
+        DefaultBatchSize = 100
+    }
+};
+
+// Register the seeder services with configuration using fluent API
+services.AddInzSeeder(seedingSettings)
+    .UseDbContext<YourDbContext>()
+    .RegisterEntitySeedersFromAssemblies();
 ```
 
-3. Add JSON seed data to the `SeedData` folder:
+3. Add JSON seed data to the `SeedData` folder in your library project:
 
 ```json
 [
@@ -77,16 +95,49 @@ services.AddSeeder<YourDbContext>((options) =>
 4. Run the seeder:
 
 ```bash
-dotnet run --project Inz.Seeder
+dotnet run --project InzSeeder.Core
 ```
 
-## Documentation
+## Configuration
 
-See the [README.md](README.md) file for detailed documentation on configuration, environment-specific seeding, and advanced features.
+InzSeeder now accepts configuration externally rather than requiring appsettings.json files. You can configure the seeder programmatically when calling `AddInzSeeder()`:
+
+```csharp
+var seedingSettings = new SeedingSettings
+{
+    Environment = "Development",
+    Profiles = new Dictionary<string, SeedingProfile>
+    {
+        ["Development"] = new SeedingProfile
+        {
+            EnabledSeeders = ["products"],
+            StrictMode = false
+        },
+        ["Production"] = new SeedingProfile
+        {
+            EnabledSeeders = ["roles"],
+            StrictMode = true
+        }
+    },
+    BatchSettings = new SeederBatchSettings
+    {
+        DefaultBatchSize = 100,
+        SeederBatchSizes = new Dictionary<string, int>
+        {
+            ["users"] = 50,
+            ["roles"] = 10
+        }
+    }
+};
+
+services.AddInzSeeder(seedingSettings)
+    .UseDbContext<YourDbContext>()
+    .RegisterEntitySeedersFromAssemblies();
+```
 
 ## Examples
 
-See the [Examples/SampleProject](Examples/SampleProject/README.md) directory for a complete example of how to use the Inz.Seeder package in a .NET application.
+See the `InzSeeder.Samples.InMemory` directory for a complete example of how to use the InzSeeder package in a .NET application.
 
 ## Testing
 

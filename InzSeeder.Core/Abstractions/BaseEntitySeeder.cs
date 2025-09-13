@@ -19,7 +19,7 @@ public abstract class BaseEntitySeeder<TEntity, TModel> : IEntitySeeder
     private readonly ISeedDataProvider _seedDataProvider;
     private readonly ISeederDbContext _dbContext;
     private readonly ILogger<BaseEntitySeeder<TEntity, TModel>> _logger;
-    private readonly SeedingSettings? _seedingSettings;
+    private readonly SeederConfiguration? _seedingSettings;
     private readonly SeedingPerformanceMetricsService? _performanceMetricsService;
 
     /// <summary>
@@ -34,7 +34,7 @@ public abstract class BaseEntitySeeder<TEntity, TModel> : IEntitySeeder
         ISeedDataProvider seedDataProvider,
         ISeederDbContext dbContext,
         ILogger<BaseEntitySeeder<TEntity, TModel>> logger,
-        SeedingSettings? seedingSettings = null,
+        SeederConfiguration? seedingSettings = null,
         SeedingPerformanceMetricsService? performanceMetricsService = null
     )
     {

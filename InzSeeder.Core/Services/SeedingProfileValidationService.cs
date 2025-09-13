@@ -28,7 +28,7 @@ public class SeedingProfileValidationService
     /// </summary>
     /// <param name="settings">The seeding settings to validate.</param>
     /// <returns>True if the settings are valid, false otherwise.</returns>
-    public bool ValidateSettings(SeedingSettings? settings)
+    public bool ValidateSettings(SeederConfiguration? settings)
     {
         if (settings == null)
         {

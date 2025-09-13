@@ -29,7 +29,6 @@ Key files and directories:
 - `Program.cs` - Entry point with CLI argument parsing
 - `InzSeeder.Core.csproj` - Project configuration with NuGet package settings
 - `README.md` - Documentation and usage instructions
-- `appsettings*.json` - Configuration files
 - `Abstractions/` - Base classes like `BaseEntitySeeder`
 - `Contracts/` - Interfaces defining the core contracts
 - `SeedData/` - Directory for JSON seed data files (embedded as resources)
@@ -107,35 +106,62 @@ public class ProductSeeder : BaseEntitySeeder<Product, ProductSeedModel>
 ```
 
 ### Registration
-Register the seeder in your application:
+Register the seeder in your application with configuration using the unified fluent API:
 
 ```csharp
-services.AddInzSeeder();
-services.AddScoped<IEntitySeeder, ProductSeeder>();
+// Create seeding settings
+var seedingSettings = new SeedingSettings
+{
+    Environment = "Development",
+    Profiles = new Dictionary<string, SeedingProfile>
+    {
+        ["Development"] = new SeedingProfile
+        {
+            EnabledSeeders = ["products", "users", "roles"],
+            StrictMode = false
+        }
+    },
+    BatchSettings = new SeederBatchSettings
+    {
+        DefaultBatchSize = 100
+    }
+};
+
+// Register the seeder services with configuration using fluent API
+services.AddInzSeeder(seedingSettings)
+    .UseDbContext<YourDbContext>()
+    .RegisterEntitySeedersFromAssemblies();
 ```
 
 ### Configuration
-The library supports environment-specific configurations through `appsettings.{Environment}.json` files:
+The library now accepts configuration externally rather than requiring appsettings.json files. You can configure the seeder programmatically when calling `AddInzSeeder()`:
 
-```json
+```csharp
+var seedingSettings = new SeedingSettings
 {
-  "Seeding": {
-    "Environment": "Local",
-    "BatchSettings": {
-      "DefaultBatchSize": 100,
-      "SeederBatchSizes": {
-        "users": 50,
-        "roles": 10
-      }
+    Environment = "Development",
+    Profiles = new Dictionary<string, SeedingProfile>
+    {
+        ["Development"] = new SeedingProfile
+        {
+            EnabledSeeders = ["roles", "users"],
+            StrictMode = false
+        }
     },
-    "Profiles": {
-      "Development": {
-        "EnabledSeeders": ["roles", "users"],
-        "StrictMode": false
-      }
+    BatchSettings = new SeederBatchSettings
+    {
+        DefaultBatchSize = 100,
+        SeederBatchSizes = new Dictionary<string, int>
+        {
+            ["users"] = 50,
+            ["roles"] = 10
+        }
     }
-  }
-}
+};
+
+services.AddInzSeeder(seedingSettings)
+    .UseDbContext<YourDbContext>()
+    .RegisterEntitySeedersFromAssemblies();
 ```
 
 ## Building and Running
@@ -178,7 +204,7 @@ dotnet run --project InzSeeder.Core -- --health-check
 1. **Generic Design**: All components are designed to work with any Entity Framework Core DbContext
 2. **Idempotency**: Seeders can be run multiple times without creating duplicates
 3. **Dependency Injection**: Heavy use of Microsoft's DI container for service resolution
-4. **Configuration-Driven**: Behavior is controlled through configuration files
+4. **Configuration-Driven**: Behavior is controlled through programmatic configuration
 5. **Logging**: Comprehensive logging using Microsoft's logging framework
 6. **Error Handling**: Graceful error handling with meaningful error messages
 7. **Performance**: Batch processing for large datasets to optimize performance

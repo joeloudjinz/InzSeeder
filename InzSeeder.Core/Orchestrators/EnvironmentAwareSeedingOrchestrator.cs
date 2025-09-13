@@ -3,7 +3,6 @@ using InzSeeder.Core.Extensions;
 using InzSeeder.Core.Models;
 using InzSeeder.Core.Services;
 using InzSeeder.Core.Utilities;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace InzSeeder.Core.Orchestrators;
@@ -15,7 +14,7 @@ public class EnvironmentAwareSeedingOrchestrator : ISeedingOrchestrator
 {
     private readonly IEnumerable<IEntitySeeder> _allSeeders;
     private readonly ISeederDbContext _dbContext;
-    private readonly IConfiguration _configuration;
+    private readonly SeederConfiguration _seederConfiguration; // Changed from IConfiguration
     private readonly SeedingProfileValidationService _validationService;
     private readonly SeedingAuditService _auditService;
     private readonly SeedingPerformanceMetricsService _performanceMetricsService;
@@ -27,7 +26,7 @@ public class EnvironmentAwareSeedingOrchestrator : ISeedingOrchestrator
     /// </summary>
     /// <param name="allSeeders">All available seeders.</param>
     /// <param name="dbContext">The database context.</param>
-    /// <param name="configuration">The application configuration.</param>
+    /// <param name="seederConfiguration">The seeding settings.</param>
     /// <param name="validationService">The seeding profile validation service.</param>
     /// <param name="auditService">The seeding audit service.</param>
     /// <param name="performanceMetricsService">The performance metrics service.</param>
@@ -36,7 +35,7 @@ public class EnvironmentAwareSeedingOrchestrator : ISeedingOrchestrator
     public EnvironmentAwareSeedingOrchestrator(
         IEnumerable<IEntitySeeder> allSeeders,
         ISeederDbContext dbContext,
-        IConfiguration configuration,
+        SeederConfiguration seederConfiguration, // Changed from IConfiguration
         SeedingProfileValidationService validationService,
         SeedingAuditService auditService,
         SeedingPerformanceMetricsService performanceMetricsService,
@@ -46,7 +45,7 @@ public class EnvironmentAwareSeedingOrchestrator : ISeedingOrchestrator
     {
         _allSeeders = allSeeders;
         _dbContext = dbContext;
-        _configuration = configuration;
+        _seederConfiguration = seederConfiguration; // Changed from _configuration
         _validationService = validationService;
         _auditService = auditService;
         _performanceMetricsService = performanceMetricsService;
@@ -59,8 +58,8 @@ public class EnvironmentAwareSeedingOrchestrator : ISeedingOrchestrator
     {
         _logger.LogInformation("Starting environment-aware data seeding process");
 
-        // Get seeding settings from configuration
-        var settings = _configuration.GetSection(SeedingSettings.SectionName).Get<SeedingSettings>() ?? new SeedingSettings();
+        // Use the injected settings directly instead of retrieving from configuration
+        var settings = _seederConfiguration ?? new SeederConfiguration();
 
         // Validate settings
         if (!_validationService.ValidateSettings(settings))
@@ -171,7 +170,7 @@ public class EnvironmentAwareSeedingOrchestrator : ISeedingOrchestrator
     /// </summary>
     /// <param name="settings">The seeding settings.</param>
     /// <returns>The seeding profile, or null if not found.</returns>
-    private SeedingProfile GetProfileForEnvironment(SeedingSettings settings)
+    private SeedingProfile GetProfileForEnvironment(SeederConfiguration settings)
     {
         settings.Profiles.TryGetValue(EnvironmentUtility.Environment(), out var profile);
         return profile ?? throw new Exception($@"Environment {EnvironmentUtility.Environment()} profile is not defined the corresponding settings file.");
