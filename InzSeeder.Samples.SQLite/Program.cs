@@ -1,4 +1,3 @@
-using InzSeeder.Core.Contracts;
 using InzSeeder.Core.Extensions;
 using InzSeeder.Core.Models;
 using InzSeeder.Core.Utilities;
@@ -92,8 +91,7 @@ internal class Program
             }
 
             // Run the seeders
-            var orchestrator = scope.ServiceProvider.GetRequiredService<ISeedingOrchestrator>();
-            await orchestrator.SeedDataAsync(CancellationToken.None);
+            await scope.ServiceProvider.RunInzSeeder(CancellationToken.None);
         }
 
         Console.WriteLine("Seeding completed successfully!");

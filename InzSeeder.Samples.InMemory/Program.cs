@@ -1,4 +1,3 @@
-using InzSeeder.Core.Contracts;
 using InzSeeder.Core.Extensions;
 using InzSeeder.Core.Models;
 using InzSeeder.Core.Utilities;
@@ -47,15 +46,15 @@ class Program
         // Add the seeder services with external configuration using fluent API
         builder.Services.AddInzSeeder(seedingSettings)
             .UseDbContext<AppDbContext>()
-            .RegisterEntitySeedersFromAssemblies();
+            .RegisterEntitySeedersFromAssemblies(typeof(Program).Assembly)
+            .RegisterEmbeddedSeedDataFromAssemblies(typeof(Program).Assembly);
 
         var host = builder.Build();
 
         // Run the seeder
         using (var scope = host.Services.CreateScope())
         {
-            var seeder = scope.ServiceProvider.GetRequiredService<ISeedingOrchestrator>();
-            await seeder.SeedDataAsync(CancellationToken.None);
+            await scope.ServiceProvider.RunInzSeeder(CancellationToken.None);
         }
 
         Console.WriteLine("Seeding completed successfully!");

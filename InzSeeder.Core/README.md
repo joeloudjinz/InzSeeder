@@ -92,7 +92,30 @@ services.AddInzSeeder(seedingSettings)
 ]
 ```
 
-4. Run the seeder:
+4. Run the seeder using the convenient extension method:
+
+```csharp
+// After building your host, create a service scope and run the seeder
+using (var scope = host.Services.CreateScope())
+{
+    // Use the convenient extension method to run the seeder
+    await scope.ServiceProvider.RunInzSeeder(CancellationToken.None);
+}
+```
+
+Alternatively, you can still use the traditional approach:
+
+```csharp
+// After building your host, create a service scope and run the seeder
+using (var scope = host.Services.CreateScope())
+{
+    // Get the seeder orchestrator and run it
+    var seeder = scope.ServiceProvider.GetRequiredService<ISeedingOrchestrator>();
+    await seeder.SeedDataAsync(CancellationToken.None);
+}
+```
+
+5. Run the seeder from command line:
 
 ```bash
 dotnet run --project InzSeeder.Core
