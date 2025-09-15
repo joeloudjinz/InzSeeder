@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "Laptop",
+    "description": "High-performance laptop for professionals",
+    "price": 1299.99
+  },
+  {
+    "id": 2,
+    "name": "Smartphone",
+    "description": "Latest smartphone with advanced features",
+    "price": 899.99
+  },
+  {
+    "id": 3,
+    "name": "Tablet",
+    "description": "Portable tablet for entertainment and work",
+    "price": 599.99
+  }
+]

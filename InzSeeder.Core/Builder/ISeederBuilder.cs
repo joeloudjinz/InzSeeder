@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace InzSeeder.Core.Extensions;
+namespace InzSeeder.Core.Builder;
 
 /// <summary>
 /// Builder interface for configuring InzSeeder services.

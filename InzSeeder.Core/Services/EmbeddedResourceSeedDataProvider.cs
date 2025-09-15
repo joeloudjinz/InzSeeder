@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using InzSeeder.Core.Contracts;
+using InzSeeder.Core.Utilities;
 
 namespace InzSeeder.Core.Services;
 
@@ -10,38 +11,66 @@ namespace InzSeeder.Core.Services;
 /// </summary>
 public class EmbeddedResourceSeedDataProvider : ISeedDataProvider
 {
-    private readonly Assembly _assembly;
-    private readonly string _resourceNamespace;
+    private readonly List<Assembly> _assemblies;
+    private readonly List<string> _resourceNamespaces;
     
     /// <summary>
     /// Initializes a new instance of the <see cref="EmbeddedResourceSeedDataProvider"/> class.
     /// </summary>
-    public EmbeddedResourceSeedDataProvider()
+    /// <param name="assemblies">The assemblies to search for seed data resources.</param>
+    public EmbeddedResourceSeedDataProvider(params Assembly[] assemblies)
     {
-        _assembly = Assembly.GetExecutingAssembly();
-        _resourceNamespace = $"{_assembly.GetName().Name}.SeedData";
+        _assemblies = assemblies.Length > 0 ? assemblies.ToList() : [Assembly.GetExecutingAssembly()];
+        _resourceNamespaces = _assemblies.Select(a => $"{a.GetName().Name}.SeedData").ToList();
     }
 
     /// <inheritdoc/>
     public async Task<(string? content, string? hash)> GetSeedDataAsync(string seedName, CancellationToken cancellationToken)
     {
-        var resourceName = $"{_resourceNamespace}.{seedName}.json";
-        
-        await using var stream = _assembly.GetManifestResourceStream(resourceName);
-        if (stream == null)
+        // Try to get environment-specific data first
+        var environment = EnvironmentUtility.Environment();
+        if (!string.IsNullOrEmpty(environment))
         {
-            // Let's log the available resources for debugging
-            var resourceNames = _assembly.GetManifestResourceNames();
-            Console.WriteLine($"Available resources: {string.Join(", ", resourceNames)}");
-            Console.WriteLine($"Looking for resource: {resourceName}");
-            return (null, null);
+            foreach (var (assembly, namespaceName) in _assemblies.Zip(_resourceNamespaces, (a, n) => (a, n)))
+            {
+                var environmentSpecificResourceName = $"{namespaceName}.{seedName}.{environment}.json";
+                var environmentContent = await ReadResourceContentAsync(assembly, environmentSpecificResourceName, cancellationToken);
+                if (environmentContent != null)
+                {
+                    return (environmentContent, ComputeHash(environmentContent));
+                }
+            }
         }
 
-        using var reader = new StreamReader(stream);
-        var content = await reader.ReadToEndAsync(cancellationToken);
+        // Fall back to default data
+        foreach (var (assembly, namespaceName) in _assemblies.Zip(_resourceNamespaces, (a, n) => (a, n)))
+        {
+            var resourceName = $"{namespaceName}.{seedName}.json";
+            var content = await ReadResourceContentAsync(assembly, resourceName, cancellationToken);
+            if (content != null)
+            {
+                return (content, ComputeHash(content));
+            }
+        }
+
+        // Debug logging - only for the first assembly to avoid verbose output
+        if (_assemblies.Count > 0)
+        {
+            var resourceNames = _assemblies[0].GetManifestResourceNames();
+            Console.WriteLine($"Available resources in {_assemblies[0].GetName().Name}: {string.Join(", ", resourceNames)}");
+            Console.WriteLine($"Looking for resource: {_resourceNamespaces[0]}.{seedName}.json");
+        }
         
-        var hash = ComputeHash(content);
-        return (content, hash);
+        return (null, null);
+    }
+    
+    private async Task<string?> ReadResourceContentAsync(Assembly assembly, string resourceName, CancellationToken cancellationToken)
+    {
+        await using var stream = assembly.GetManifestResourceStream(resourceName);
+        if (stream == null) return null;
+
+        using var reader = new StreamReader(stream);
+        return await reader.ReadToEndAsync(cancellationToken);
     }
     
     private static string ComputeHash(string content)

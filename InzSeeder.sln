@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InzSeeder.Core", "InzSeeder
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InzSeeder.Samples.InMemory", "InzSeeder.Samples.InMemory\InzSeeder.Samples.InMemory.csproj", "{AFFF76E0-580A-42A1-A1EC-A975BC84130D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InzSeeder.Samples.SQLite", "InzSeeder.Samples.SQLite\InzSeeder.Samples.SQLite.csproj", "{D0781996-8323-4F21-8D3B-252D0CFB8BC3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{AFFF76E0-580A-42A1-A1EC-A975BC84130D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AFFF76E0-580A-42A1-A1EC-A975BC84130D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AFFF76E0-580A-42A1-A1EC-A975BC84130D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0781996-8323-4F21-8D3B-252D0CFB8BC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0781996-8323-4F21-8D3B-252D0CFB8BC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0781996-8323-4F21-8D3B-252D0CFB8BC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0781996-8323-4F21-8D3B-252D0CFB8BC3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

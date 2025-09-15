@@ -1,9 +1,6 @@
-using InzSeeder.Core.Adapters;
-using InzSeeder.Core.Contracts;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace InzSeeder.Core.Extensions;
+namespace InzSeeder.Core.Builder;
 
 /// <summary>
 /// Builder implementation for configuring InzSeeder services.

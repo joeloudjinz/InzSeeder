@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "Gaming Laptop",
+    "description": "High-performance gaming laptop",
+    "price": 1999.99
+  },
+  {
+    "id": 2,
+    "name": "Budget Smartphone",
+    "description": "Affordable smartphone with essential features",
+    "price": 299.99
+  },
+  {
+    "id": 3,
+    "name": "Kids Tablet",
+    "description": "Child-friendly tablet with parental controls",
+    "price": 199.99
+  }
+]
