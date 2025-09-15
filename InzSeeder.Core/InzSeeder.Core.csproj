@@ -1,23 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <OutputType>Exe</OutputType>
+        <OutputType>Library</OutputType>
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageId>Inz.Seeder</PackageId>
-        <PackageVersion>1.0.0</PackageVersion>
-        <Authors>Your Name</Authors>
-        <Company>Your Company</Company>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Authors>Abdellah Addoun</Authors>
+        <Company>Inz Softwares</Company>
         <Product>Inz Seeder</Product>
         <Description>A flexible data seeding library for .NET applications</Description>
-        <PackageTags>seeding;entity-framework;data;database</PackageTags>
+        <PackageTags>seeding;seeder;entity-framework;data;database</PackageTags>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
-
-    <ItemGroup>
-        <EmbeddedResource Include="SeedData\**\*.json"/>
-    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.8" />

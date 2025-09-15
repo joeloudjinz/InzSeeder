@@ -12,7 +12,6 @@ InzSeeder is a flexible, generic data seeding library for .NET applications that
 - **Audit Logging**: Tracks all seeding operations
 - **Hash-Based Change Detection**: Only re-seeds when data changes
 - **Extensible Architecture**: Easy to create custom seeders
-- **Command-Line Interface**: Rich CLI with preview, dry-run, and health check modes
 
 ## Projects
 
