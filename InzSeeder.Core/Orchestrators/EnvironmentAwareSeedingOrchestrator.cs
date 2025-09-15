@@ -16,9 +16,6 @@ public class EnvironmentAwareSeedingOrchestrator : ISeedingOrchestrator
     private readonly ISeederDbContext _dbContext;
     private readonly SeederConfiguration _seederConfiguration; // Changed from IConfiguration
     private readonly SeedingProfileValidationService _validationService;
-    private readonly SeedingAuditService _auditService;
-    private readonly SeedingPerformanceMetricsService _performanceMetricsService;
-    private readonly SeedingMonitoringService _monitoringService;
     private readonly ILogger<EnvironmentAwareSeedingOrchestrator> _logger;
 
     /// <summary>
@@ -28,28 +25,19 @@ public class EnvironmentAwareSeedingOrchestrator : ISeedingOrchestrator
     /// <param name="dbContext">The database context.</param>
     /// <param name="seederConfiguration">The seeding settings.</param>
     /// <param name="validationService">The seeding profile validation service.</param>
-    /// <param name="auditService">The seeding audit service.</param>
-    /// <param name="performanceMetricsService">The performance metrics service.</param>
-    /// <param name="monitoringService">The monitoring service.</param>
     /// <param name="logger">The logger.</param>
     public EnvironmentAwareSeedingOrchestrator(
         IEnumerable<IEntitySeeder> allSeeders,
         ISeederDbContext dbContext,
-        SeederConfiguration seederConfiguration, // Changed from IConfiguration
+        SeederConfiguration seederConfiguration,
         SeedingProfileValidationService validationService,
-        SeedingAuditService auditService,
-        SeedingPerformanceMetricsService performanceMetricsService,
-        SeedingMonitoringService monitoringService,
         ILogger<EnvironmentAwareSeedingOrchestrator> logger
     )
     {
         _allSeeders = allSeeders;
         _dbContext = dbContext;
-        _seederConfiguration = seederConfiguration; // Changed from _configuration
+        _seederConfiguration = seederConfiguration;
         _validationService = validationService;
-        _auditService = auditService;
-        _performanceMetricsService = performanceMetricsService;
-        _monitoringService = monitoringService;
         _logger = logger;
     }
 
@@ -59,33 +47,16 @@ public class EnvironmentAwareSeedingOrchestrator : ISeedingOrchestrator
         _logger.LogInformation("Starting environment-aware data seeding process");
 
         // Use the injected settings directly instead of retrieving from configuration
-        var settings = _seederConfiguration ?? new SeederConfiguration();
+        var settings = _seederConfiguration;
 
         // Validate settings
-        if (!_validationService.ValidateSettings(settings))
-        {
-            _logger.LogError("Invalid seeding configuration detected. Seeding process aborted.");
-            await _auditService.LogOperationAsync(
-                seederName: "Orchestrator",
-                operation: "ConfigurationValidation",
-                details: "Invalid seeding configuration detected",
-                success: false,
-                errorMessage: "Invalid seeding configuration"
-            );
-            throw new InvalidOperationException("Invalid seeding configuration detected.");
-        }
+        if (!_validationService.ValidateSettings(settings)) throw new InvalidOperationException("Invalid seeding configuration detected. Seeding process aborted.");
 
         // Get profile for the current environment
-        var profile = GetProfileForEnvironment(settings);
-        // TODO log the profile details using _logger.LogInformation()
+        var profile = settings.Profile;
 
         // Log the start of the seeding process
-        await _auditService.LogOperationAsync(
-            seederName: "Orchestrator",
-            operation: "Start",
-            details: $"Starting seeding process with {profile.EnabledSeeders?.Count ?? 0} seeders enabled",
-            true
-        );
+        _logger.LogInformation("Starting seeding process with {EnabledSeedersCount} seeders enabled", profile.EnabledSeeders?.Count ?? 0);
 
         // Filter seeders based on profile and environment
         var seedersToRun = FilterSeedersByProfile(_allSeeders, profile).ToList();
@@ -98,8 +69,7 @@ public class EnvironmentAwareSeedingOrchestrator : ISeedingOrchestrator
 
         foreach (var skippedSeeder in skippedSeeders)
         {
-            _logger.LogInformation("Seeder '{SeederName}' will be skipped based on environment configuration", skippedSeeder);
-            await _auditService.LogOperationAsync(skippedSeeder, operation: "Skip", details: "Seeder skipped based on environment configuration", success: true);
+            _logger.LogWarning("Seeder '{SeederName}' will be skipped based on environment configuration", skippedSeeder);
         }
 
         // Sort seeders based on their dependencies
@@ -115,65 +85,31 @@ public class EnvironmentAwareSeedingOrchestrator : ISeedingOrchestrator
             foreach (var seeder in sortedSeeders)
             {
                 _logger.LogInformation("Executing seeder '{SeederName}'", seeder.SeedName);
-                await _auditService.LogOperationAsync(seeder.SeedName, operation: "Execute", details: "Starting seeder execution", success: true);
 
-                // Start performance measurement for the seeder
-                var startTime = DateTime.UtcNow;
-                Exception? seederException = null;
                 try
                 {
                     await seeder.ExecuteAsync(cancellationToken);
                 }
                 catch (Exception ex)
                 {
-                    seederException = ex;
-                    throw;
+                    _logger.LogCritical(ex, "Seeder {SeederName} execution failed", seeder.SeedName);
                 }
                 finally
                 {
-                    // Record performance metrics and report to monitoring
-                    var endTime = DateTime.UtcNow;
-                    var duration = endTime - startTime;
-
-                    // Get item count from performance metrics if available
-                    var metrics = _performanceMetricsService.GetMetrics().FirstOrDefault(m => m.SeederName == seeder.SeedName);
-                    var itemCount = metrics?.ItemCount ?? 0;
-
-                    // Report to monitoring service
-                    _monitoringService.ReportSeedingOperation(seeder.SeedName, duration, itemCount, seederException == null, seederException?.Message);
+                    _logger.LogInformation("Seeder '{SeederName}' execution completed", seeder.SeedName);
                 }
-
-                await _auditService.LogOperationAsync(seeder.SeedName, operation: "Complete", details: "Seeder execution completed successfully", success: true);
             }
 
             // Commit the transaction
             await transaction.CommitAsync(cancellationToken);
             _logger.LogInformation("Environment-aware data seeding process completed successfully");
-            await _auditService.LogOperationAsync(seederName: "Orchestrator", operation: "Complete", details: "Seeding process completed successfully", success: true);
         }
         catch (Exception ex)
         {
             // Rollback the transaction on any exception
             await transaction.RollbackAsync(cancellationToken);
             _logger.LogError(ex, "Environment-aware data seeding process failed");
-            await _auditService.LogOperationAsync(seederName: "Orchestrator", operation: "Failed", details: "Seeding process failed", success: false, ex.Message);
-
-            // Report failure to monitoring
-            _monitoringService.ReportAlert(seederName: "Orchestrator", alertMessage: "Seeding process failed", AlertSeverity.Error);
-
-            throw;
         }
-    }
-
-    /// <summary>
-    /// Gets the seeding profile for the specified environment.
-    /// </summary>
-    /// <param name="settings">The seeding settings.</param>
-    /// <returns>The seeding profile, or null if not found.</returns>
-    private SeedingProfile GetProfileForEnvironment(SeederConfiguration settings)
-    {
-        settings.Profiles.TryGetValue(EnvironmentUtility.Environment(), out var profile);
-        return profile ?? throw new Exception($@"Environment {EnvironmentUtility.Environment()} profile is not defined the corresponding settings file.");
     }
 
     /// <summary>

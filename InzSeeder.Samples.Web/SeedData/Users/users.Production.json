@@ -1,0 +1,9 @@
+[
+  {
+    "id": 1,
+    "firstName": "Bob",
+    "lastName": "Johnson",
+    "email": "bob.johnson@admin.com",
+    "dateOfBirth": "1992-11-08T00:00:00Z"
+  }
+]

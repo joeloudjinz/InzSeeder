@@ -1,5 +1,3 @@
-using InzSeeder.Core.Models;
-
 namespace InzSeeder.Core.Utilities;
 
 /// <summary>
@@ -12,7 +10,7 @@ public static class EnvironmentUtility
     /// <summary>
     /// Valid environment names for the seeder application.
     /// </summary>
-    public static readonly string[] ValidEnvironments = ["Development", "Staging", "Production"];
+    public static readonly string[] ValidEnvironments = ["Development", "Staging", "Production", "IntegrationTest"];
 
     /// <summary>
     /// Gets the current environment for the seeder application.
@@ -28,7 +26,7 @@ public static class EnvironmentUtility
     /// <param name="environmentFromCommandLine">Environment specified via command-line arguments.</param>
     /// <returns>The determined environment name.</returns>
     /// <exception cref="NullReferenceException">Thrown when no environment can be determined.</exception>
-    public static string DetermineEnvironment(string? environmentFromCommandLine)
+    public static string DetermineEnvironment(string? environmentFromCommandLine = null)
     {
         // 1. Command-line argument has highest precedence.
         if (!string.IsNullOrEmpty(environmentFromCommandLine))
@@ -47,48 +45,15 @@ public static class EnvironmentUtility
             return seedingEnvVar;
         }
 
-        // 3. Fallback to standard DOTNET_ENVIRONMENT variable.
-        var dotnetEnvVar = System.Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+        // 3. Fallback to standard ASPNETCORE_ENVIRONMENT variable.
+        var dotnetEnvVar = System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
         if (!string.IsNullOrEmpty(dotnetEnvVar))
         {
-            Console.WriteLine($"[INFO] Using environment from DOTNET_ENVIRONMENT variable: {dotnetEnvVar}");
+            Console.WriteLine($"[INFO] Using environment from ASPNETCORE_ENVIRONMENT variable: {dotnetEnvVar}");
             _environment = dotnetEnvVar;
             return dotnetEnvVar;
         }
 
         throw new NullReferenceException("Environment is not specified");
-    }
-
-    /// <summary>
-    /// Validates the seeding configuration.
-    /// </summary>
-    /// <param name="settings">The seeding settings to validate.</param>
-    /// <returns>True if the configuration is valid, false otherwise.</returns>
-    public static bool ValidateConfiguration(SeederConfiguration? settings)
-    {
-        if (settings == null)
-        {
-            Console.Error.WriteLine("Seeding settings are null");
-            return false;
-        }
-
-        // Validate environment names (basic validation)
-        foreach (var profile in settings.Profiles.Where(profile => !ValidEnvironments.Contains(profile.Key, StringComparer.OrdinalIgnoreCase)))
-        {
-            Console.Error.WriteLine("Non-standard environment name detected: {0}", profile.Key);
-            return false;
-        }
-
-        // Additional validation can be added here
-        return true;
-    }
-
-    /// <summary>
-    /// For testing purposes only. Resets the environment to allow re-setting.
-    /// </summary>
-    /// <param name="environment">The environment to set.</param>
-    public static void ResetEnvironmentForTesting(string? environment)
-    {
-        _environment = environment;
     }
 }

@@ -1,5 +1,6 @@
 using InzSeeder.Core.Contracts;
 using InzSeeder.Core.Models;
+using InzSeeder.Core.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace InzSeeder.Core.Services;
@@ -39,13 +40,7 @@ public class SeedingProfileValidationService
         // Get all seeder names
         var seederNames = _seeders.Select(s => s.SeedName).ToHashSet();
 
-        // Validate each profile
-        foreach (var (environment, profile) in settings.Profiles)
-        {
-            if (!ValidateProfile(environment, profile, seederNames)) return false;
-        }
-
-        return true;
+        return ValidateProfile(EnvironmentUtility.Environment(), settings.Profile, seederNames);
     }
 
     /// <summary>
@@ -68,10 +63,9 @@ public class SeedingProfileValidationService
         }
 
         // Validate environment name
-        var validEnvironments = new[] { "Development", "Staging", "Production" };
-        if (!validEnvironments.Contains(environment, StringComparer.OrdinalIgnoreCase))
+        if (!EnvironmentUtility.ValidEnvironments.Contains(environment, StringComparer.OrdinalIgnoreCase))
         {
-            _logger.LogWarning("Non-standard environment name detected: {Environment}", environment);
+            _logger.LogWarning("Non-standard environment name detected: {Environment}, supported environments are: {Envs}", environment, string.Join(", ", EnvironmentUtility.ValidEnvironments));
         }
 
         return true;

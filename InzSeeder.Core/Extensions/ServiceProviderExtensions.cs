@@ -1,5 +1,5 @@
-using System;
 using InzSeeder.Core.Contracts;
+using InzSeeder.Core.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace InzSeeder.Core.Extensions;
@@ -21,6 +21,8 @@ public static class ServiceProviderExtensions
     public static async Task RunInzSeeder(this IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(serviceProvider);
+
+        EnvironmentUtility.DetermineEnvironment();
         
         var seeder = serviceProvider.GetService<ISeedingOrchestrator>() 
             ?? throw new InvalidOperationException("ISeedingOrchestrator is not registered. Please ensure AddInzSeeder() is called during service registration.");

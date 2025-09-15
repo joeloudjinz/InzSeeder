@@ -1,0 +1,45 @@
+using InzSeeder.Core.Abstractions;
+using InzSeeder.Core.Contracts;
+using InzSeeder.Core.Models;
+using InzSeeder.Core.Services;
+using InzSeeder.Samples.Web.Models;
+
+namespace InzSeeder.Samples.Web.Seeders;
+
+public class UserSeeder(
+    ISeedDataProvider seedDataProvider,
+    ISeederDbContext dbContext,
+    ILogger<UserSeeder> logger,
+    SeederConfiguration? seedingSettings = null,
+    SeedingPerformanceMetricsService? performanceMetricsService = null
+) : BaseEntitySeeder<User, UserSeedModel>(seedDataProvider, dbContext, logger, seedingSettings, performanceMetricsService)
+{
+    public override string SeedName => "users";
+
+    protected override object GetBusinessKeyFromEntity(User entity) => entity.Id;
+
+    protected override object GetBusinessKey(UserSeedModel model) => model.Id;
+
+    protected override User MapToEntity(UserSeedModel model)
+    {
+        return new User
+        {
+            Id = model.Id,
+            FirstName = model.FirstName,
+            LastName = model.LastName,
+            Email = model.Email,
+            DateOfBirth = model.DateOfBirth,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
+
+    protected override void UpdateEntity(User existingEntity, UserSeedModel model)
+    {
+        existingEntity.FirstName = model.FirstName;
+        existingEntity.LastName = model.LastName;
+        existingEntity.Email = model.Email;
+        existingEntity.DateOfBirth = model.DateOfBirth;
+        existingEntity.UpdatedAt = DateTime.UtcNow;
+    }
+}

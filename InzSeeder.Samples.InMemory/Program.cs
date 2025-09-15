@@ -25,14 +25,10 @@ class Program
         // Create seeding settings
         var seedingSettings = new SeederConfiguration
         {
-            Environment = "Development",
-            Profiles = new Dictionary<string, SeedingProfile>
+            Profile = new SeedingProfile
             {
-                ["Development"] = new()
-                {
-                    EnabledSeeders = ["products"],
-                    StrictMode = false
-                }
+                EnabledSeeders = ["products"],
+                StrictMode = false
             },
             BatchSettings = new SeederBatchSettings
             {

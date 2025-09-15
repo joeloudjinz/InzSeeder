@@ -26,14 +26,9 @@ public static class ServiceCollectionExtensions
         
         services.AddSingleton(configuration ?? new SeederConfiguration());
         services.AddScoped<ISeedingOrchestrator, EnvironmentAwareSeedingOrchestrator>();
+        services.AddScoped<SeedingPerformanceMetricsService>();
         services.AddScoped<SeedingProfileValidationService>();
         services.AddScoped<ExecutionPlanPreviewService>();
-        services.AddScoped<SeederHealthCheckService>();
-        services.AddScoped<SeedingAuditService>();
-        services.AddScoped<SeedDataIntegrityService>();
-        services.AddScoped<SeedingMonitoringService>();
-        services.AddScoped<SeedingPerformanceMetricsService>();
-        services.AddScoped<SeederPurgeService>();
 
         return new SeederBuilder(services);
     }

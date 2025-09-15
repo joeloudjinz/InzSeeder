@@ -40,8 +40,7 @@ public class ExecutionPlanPreviewService
             return;
         }
 
-        // Get profile for the current environment
-        var profile = GetProfileForEnvironment(settings);
+        var profile = settings.Profile;
 
         Console.WriteLine($"Strict Mode: {profile.StrictMode}");
 
@@ -79,17 +78,6 @@ public class ExecutionPlanPreviewService
         ShowDependencyInformation();
 
         await Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Gets the seeding profile for the specified environment.
-    /// </summary>
-    /// <param name="settings">The seeding settings.</param>
-    /// <returns>The seeding profile, or null if not found.</returns>
-    private SeedingProfile GetProfileForEnvironment(SeederConfiguration settings)
-    {
-        settings.Profiles.TryGetValue(EnvironmentUtility.Environment(), out var profile);
-        return profile ?? throw new Exception($"Environment [{EnvironmentUtility.Environment()}] profile is not defined the corresponding settings file.");
     }
 
     /// <summary>
