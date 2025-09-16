@@ -2,16 +2,39 @@
 
 ## Overview
 
-StrictMode is a crucial configuration option in InzSeeder that controls how seeders are filtered and executed based on environment-specific profiles. This document provides a comprehensive guide on how StrictMode works with other configuration options and features.
+StrictMode is a crucial configuration option in InzSeeder that controls how seeders are filtered and executed based on the current environment configuration. This document provides a comprehensive guide on how StrictMode works with other configuration options and features.
 
 ## Core Concepts
 
-### SeedingProfile Configuration
+### SeederConfiguration Structure
+
+The seeder configuration consists of two main components:
 
 ```csharp
+public class SeederConfiguration
+{
+    /// <summary>
+    /// Gets or sets the profile of the current environment.
+    /// </summary>
+    public SeedingProfile Profile { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the batch processing settings.
+    /// </summary>
+    public SeederBatchSettings BatchSettings { get; set; } = new();
+}
+
 public class SeedingProfile
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether strict mode is enabled.
+    /// In strict mode, only explicitly enabled seeders will run.
+    /// </summary>
     public bool StrictMode { get; set; }
+
+    /// <summary>
+    /// Gets or sets the list of seeders that are enabled for this profile.
+    /// </summary>
     public List<string>? EnabledSeeders { get; set; }
 }
 ```
@@ -49,15 +72,22 @@ When StrictMode is enabled (true), the filtering is more restrictive:
 ```json
 {
   "Seeder": {
-    "Profiles": {
-      "Development": {
-        "StrictMode": false,
-        "EnabledSeeders": ["products", "users", "categories"]
-      },
-      "Production": {
-        "StrictMode": true,
-        "EnabledSeeders": ["categories"]
-      }
+    "Profile": {
+      "StrictMode": false,
+      "EnabledSeeders": ["products", "users", "categories"]
+    }
+  }
+}
+```
+
+In a production environment:
+
+```json
+{
+  "Seeder": {
+    "Profile": {
+      "StrictMode": true,
+      "EnabledSeeders": ["categories"]
     }
   }
 }
@@ -65,7 +95,7 @@ When StrictMode is enabled (true), the filtering is more restrictive:
 
 ### Behavior Examples
 
-#### Development Profile (StrictMode = false)
+#### Development Configuration (StrictMode = false)
 ```csharp
 // With configuration:
 // EnabledSeeders: ["products", "users"]
@@ -77,7 +107,7 @@ When StrictMode is enabled (true), the filtering is more restrictive:
 // categories seeder: MAY RUN (depends on other factors)
 ```
 
-#### Production Profile (StrictMode = true)
+#### Production Configuration (StrictMode = true)
 ```csharp
 // With configuration:
 // EnabledSeeders: ["categories"]
@@ -222,11 +252,9 @@ The environment used for data loading comes from:
 ```json
 {
   "Seeder": {
-    "Profiles": {
-      "Development": {
-        "StrictMode": false,
-        "EnabledSeeders": ["products", "users"]
-      }
+    "Profile": {
+      "StrictMode": false,
+      "EnabledSeeders": ["products", "users"]
     }
   }
 }
@@ -247,11 +275,9 @@ Result:
 ```json
 {
   "Seeder": {
-    "Profiles": {
-      "Production": {
-        "StrictMode": true,
-        "EnabledSeeders": ["categories"]
-      }
+    "Profile": {
+      "StrictMode": true,
+      "EnabledSeeders": ["categories"]
     }
   }
 }
@@ -269,11 +295,9 @@ Result:
 ```json
 {
   "Seeder": {
-    "Profiles": {
-      "Staging": {
-        "StrictMode": false,
-        "EnabledSeeders": ["categories"]
-      }
+    "Profile": {
+      "StrictMode": false,
+      "EnabledSeeders": ["categories"]
     }
   }
 }
@@ -297,9 +321,11 @@ Always enable StrictMode in production environments:
 
 ```json
 {
-  "Production": {
-    "StrictMode": true,
-    "EnabledSeeders": ["essential-data-only"]
+  "Seeder": {
+    "Profile": {
+      "StrictMode": true,
+      "EnabledSeeders": ["essential-data-only"]
+    }
   }
 }
 ```
@@ -310,9 +336,11 @@ In strict mode, be explicit about what should run:
 
 ```json
 {
-  "Production": {
-    "StrictMode": true,
-    "EnabledSeeders": ["categories", "system-config", "lookup-data"]
+  "Seeder": {
+    "Profile": {
+      "StrictMode": true,
+      "EnabledSeeders": ["categories", "system-config", "lookup-data"]
+    }
   }
 }
 ```
@@ -372,16 +400,16 @@ SeedData/
 
 When adding a new seeder to your application:
 
-1. **Development**: Add to `EnabledSeeders` in Development profile
+1. **Development**: Add to `EnabledSeeders` in the Development environment configuration
 2. **Testing**: Verify it works with current StrictMode settings
-3. **Production**: Only add to `EnabledSeeders` if StrictMode=true in Production
+3. **Production**: Only add to `EnabledSeeders` in the Production environment configuration if StrictMode=true
 
 ### Scenario 2: Environment Migration
 
 When moving from one environment to another:
 
-1. **Check StrictMode**: Understand the filtering behavior
-2. **Review EnabledSeeders**: Ensure required seeders are listed
+1. **Check StrictMode**: Understand the filtering behavior in the target environment
+2. **Review EnabledSeeders**: Ensure required seeders are listed in the target environment configuration
 3. **Verify Attributes**: Confirm environment compatibility
 4. **Check Custom Logic**: Does `IEnvironmentAwareSeeder` logic prevent execution?
 5. **Validate Data Files**: Do the required JSON files exist?
@@ -390,32 +418,58 @@ When moving from one environment to another:
 
 When seeders aren't running as expected:
 
-1. **Check StrictMode**: Is it preventing execution?
-2. **Verify Enablement**: Is the seeder in `EnabledSeeders`?
+1. **Check StrictMode**: Is it preventing execution in the current environment?
+2. **Verify Enablement**: Is the seeder in `EnabledSeeders` in the current environment configuration?
 3. **Review Attributes**: Are there environment restrictions?
 4. **Check Custom Logic**: Does `IEnvironmentAwareSeeder` logic prevent execution?
 5. **Validate Data Files**: Do the required JSON files exist?
 
 ## Advanced Configuration Patterns
 
-### Pattern 1: Tiered Environments
+### Pattern 1: Environment-Specific Configurations
 
+Different environments use different configuration files with the appropriate settings:
+
+Development (`appsettings.Development.json`):
 ```json
 {
   "Seeder": {
-    "Profiles": {
-      "Development": {
-        "StrictMode": false,
-        "EnabledSeeders": ["products", "users", "categories", "test-data"]
-      },
-      "Staging": {
-        "StrictMode": true,
-        "EnabledSeeders": ["products", "users", "categories"]
-      },
-      "Production": {
-        "StrictMode": true,
-        "EnabledSeeders": ["categories", "essential-config"]
-      }
+    "Profile": {
+      "StrictMode": false,
+      "EnabledSeeders": ["products", "users", "categories", "test-data"]
+    },
+    "BatchSettings": {
+      "DefaultBatchSize": 50
+    }
+  }
+}
+```
+
+Staging (`appsettings.Staging.json`):
+```json
+{
+  "Seeder": {
+    "Profile": {
+      "StrictMode": true,
+      "EnabledSeeders": ["products", "users", "categories"]
+    },
+    "BatchSettings": {
+      "DefaultBatchSize": 200
+    }
+  }
+}
+```
+
+Production (`appsettings.Production.json`):
+```json
+{
+  "Seeder": {
+    "Profile": {
+      "StrictMode": true,
+      "EnabledSeeders": ["categories", "essential-config"]
+    },
+    "BatchSettings": {
+      "DefaultBatchSize": 100
     }
   }
 }

@@ -28,10 +28,8 @@ This is the main library project that implements the data seeding functionality.
 Key files and directories:
 - `Program.cs` - Entry point with CLI argument parsing
 - `InzSeeder.Core.csproj` - Project configuration with NuGet package settings
-- `README.md` - Documentation and usage instructions
 - `Abstractions/` - Base classes like `BaseEntitySeeder`
 - `Contracts/` - Interfaces defining the core contracts
-- `SeedData/` - Directory for JSON seed data files (embedded as resources)
 
 ### InzSeeder.Samples.InMemory
 A sample project demonstrating how to use the InzSeeder library.
@@ -39,7 +37,6 @@ A sample project demonstrating how to use the InzSeeder library.
 Key files and directories:
 - `Program.cs` - Sample application entry point
 - `InzSeeder.Samples.InMemory.csproj` - Project configuration
-- `README.md` - Sample project documentation
 - `Models/` - Entity and seeder models
 - `Data/` - DbContext implementation
 - `Seeders/` - Custom seeder implementations
@@ -47,122 +44,12 @@ Key files and directories:
 
 ## Technology Stack
 
-- **Language**: C# (.NET 9.0)
-- **Framework**: .NET Core
+- **Language**: C# 13
+- **Framework**: .NET Core (Version 9)
 - **ORM**: Entity Framework Core
 - **Dependency Injection**: Microsoft.Extensions.DependencyInjection
 - **Configuration**: Microsoft.Extensions.Configuration
 - **Logging**: Microsoft.Extensions.Logging
-- **CLI Parsing**: Custom command-line argument parser
-
-## Core Concepts
-
-### BaseEntitySeeder
-The `BaseEntitySeeder<TEntity, TModel>` is an abstract base class that implements the template method pattern for entity seeders. It provides a complete implementation for:
-1. Loading seed data from JSON files
-2. Checking if data has already been seeded using hash-based change detection
-3. Deserializing JSON into model objects
-4. Fetching existing entities from the database
-5. Processing entities in batches
-6. Updating existing entities or creating new ones
-7. Recording seeding history
-
-### Interfaces
-- `IEntitySeeder` - Core interface for all seeders
-- `ISeedingOrchestrator` - Manages the overall seeding process
-- `ISeedDataProvider` - Provides seed data from various sources
-- `ISeederDbContext` - Database context interface
-
-## Usage Patterns
-
-### Creating a Custom Seeder
-To create a custom seeder, inherit from `BaseEntitySeeder` and implement the abstract methods:
-
-```csharp
-public class ProductSeeder : BaseEntitySeeder<Product, ProductSeedModel>
-{
-    public override string SeedName => "products";
-
-    protected override object GetBusinessKeyFromEntity(Product entity) => entity.Id;
-    
-    protected override object GetBusinessKey(ProductSeedModel model) => model.Id;
-    
-    protected override Product MapToEntity(ProductSeedModel model)
-    {
-        return new Product
-        {
-            Id = model.Id,
-            Name = model.Name,
-            Price = model.Price
-        };
-    }
-    
-    protected override void UpdateEntity(Product existingEntity, ProductSeedModel model)
-    {
-        existingEntity.Name = model.Name;
-        existingEntity.Price = model.Price;
-    }
-}
-```
-
-### Registration
-Register the seeder in your application with configuration using the unified fluent API:
-
-```csharp
-// Create seeding settings
-var seedingSettings = new SeedingSettings
-{
-    Environment = "Development",
-    Profiles = new Dictionary<string, SeedingProfile>
-    {
-        ["Development"] = new SeedingProfile
-        {
-            EnabledSeeders = ["products", "users", "roles"],
-            StrictMode = false
-        }
-    },
-    BatchSettings = new SeederBatchSettings
-    {
-        DefaultBatchSize = 100
-    }
-};
-
-// Register the seeder services with configuration using fluent API
-services.AddInzSeeder(seedingSettings)
-    .UseDbContext<YourDbContext>()
-    .RegisterEntitySeedersFromAssemblies();
-```
-
-### Configuration
-The library now accepts configuration externally rather than requiring appsettings.json files. You can configure the seeder programmatically when calling `AddInzSeeder()`:
-
-```csharp
-var seedingSettings = new SeedingSettings
-{
-    Environment = "Development",
-    Profiles = new Dictionary<string, SeedingProfile>
-    {
-        ["Development"] = new SeedingProfile
-        {
-            EnabledSeeders = ["roles", "users"],
-            StrictMode = false
-        }
-    },
-    BatchSettings = new SeederBatchSettings
-    {
-        DefaultBatchSize = 100,
-        SeederBatchSizes = new Dictionary<string, int>
-        {
-            ["users"] = 50,
-            ["roles"] = 10
-        }
-    }
-};
-
-services.AddInzSeeder(seedingSettings)
-    .UseDbContext<YourDbContext>()
-    .RegisterEntitySeedersFromAssemblies();
-```
 
 ## Building and Running
 
@@ -179,6 +66,7 @@ dotnet test
 
 To package as NuGet:
 ```bash
+cd InzSeeder.Core
 dotnet pack
 ```
 
@@ -187,16 +75,6 @@ To run the sample project:
 ```bash
 cd InzSeeder.Samples.InMemory
 dotnet run
-```
-
-### CLI Usage
-The library provides a rich CLI with several options:
-```bash
-dotnet run --project InzSeeder.Core
-dotnet run --project InzSeeder.Core -- --help
-dotnet run --project InzSeeder.Core -- --environment Production
-dotnet run --project InzSeeder.Core -- --preview
-dotnet run --project InzSeeder.Core -- --health-check
 ```
 
 ## Development Conventions
