@@ -10,7 +10,7 @@ public static class EnvironmentUtility
     /// <summary>
     /// Valid environment names for the seeder application.
     /// </summary>
-    public static readonly string[] ValidEnvironments = ["Development", "Staging", "Production", "IntegrationTest"];
+    public static readonly string[] ValidEnvironments = ["Development", "Staging", "Production", "Test", "IntegrationTest"];
 
     /// <summary>
     /// Gets the current environment for the seeder application.
@@ -23,24 +23,22 @@ public static class EnvironmentUtility
     /// Determines the environment for the seeder application based on command-line arguments,
     /// environment variables, or throws an exception if none is found.
     /// </summary>
-    /// <param name="environmentFromCommandLine">Environment specified via command-line arguments.</param>
+    /// <param name="environment">Specified environment.</param>
     /// <returns>The determined environment name.</returns>
     /// <exception cref="NullReferenceException">Thrown when no environment can be determined.</exception>
-    public static string DetermineEnvironment(string? environmentFromCommandLine = null)
+    public static string DetermineEnvironment(string? environment = null)
     {
         // 1. Command-line argument has highest precedence.
-        if (!string.IsNullOrEmpty(environmentFromCommandLine))
+        if (!string.IsNullOrEmpty(environment))
         {
-            Console.WriteLine($"[INFO] Using environment from command line: {environmentFromCommandLine}");
-            _environment = environmentFromCommandLine;
-            return environmentFromCommandLine;
+            _environment = environment;
+            return environment;
         }
 
         // 2. Fallback to custom SEEDING_ENVIRONMENT variable.
         var seedingEnvVar = System.Environment.GetEnvironmentVariable("SEEDING_ENVIRONMENT");
         if (!string.IsNullOrEmpty(seedingEnvVar))
         {
-            Console.WriteLine($"[INFO] Using environment from SEEDING_ENVIRONMENT variable: {seedingEnvVar}");
             _environment = seedingEnvVar;
             return seedingEnvVar;
         }
@@ -49,11 +47,18 @@ public static class EnvironmentUtility
         var dotnetEnvVar = System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
         if (!string.IsNullOrEmpty(dotnetEnvVar))
         {
-            Console.WriteLine($"[INFO] Using environment from ASPNETCORE_ENVIRONMENT variable: {dotnetEnvVar}");
             _environment = dotnetEnvVar;
             return dotnetEnvVar;
         }
 
         throw new NullReferenceException("Environment is not specified");
+    }
+    
+    /// <summary>
+    /// Resets the environment for testing purposes.
+    /// </summary>
+    public static void ResetForTesting()
+    {
+        _environment = null;
     }
 }

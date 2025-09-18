@@ -28,7 +28,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISeedingOrchestrator, EnvironmentAwareSeedingOrchestrator>();
         services.AddScoped<SeedingPerformanceMetricsService>();
         services.AddScoped<SeedingProfileValidationService>();
-        services.AddScoped<ExecutionPlanPreviewService>();
 
         return new SeederBuilder(services);
     }

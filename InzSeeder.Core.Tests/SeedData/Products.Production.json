@@ -1,0 +1,20 @@
+[
+  {
+    "Id": 1,
+    "Name": "Enterprise Laptop",
+    "Sku": "LAPTOP-001",
+    "Price": 2299.99
+  },
+  {
+    "Id": 2,
+    "Name": "Business Smartphone",
+    "Sku": "MOUSE-001",
+    "Price": 1199.99
+  },
+  {
+    "Id": 3,
+    "Name": "Enterprise Tablet",
+    "Sku": "TABLET-001",
+    "Price": 899.99
+  }
+]
