@@ -8,7 +8,7 @@ namespace InzSeeder.Core.Services;
 /// <summary>
 /// Service for validating seeding profiles and configurations.
 /// </summary>
-public class SeedingProfileValidationService
+internal class SeedingProfileValidationService
 {
     private readonly IEnumerable<IBaseEntityDataSeeder> _seeders;
     private readonly ILogger<SeedingProfileValidationService> _logger;

@@ -9,7 +9,7 @@ namespace InzSeeder.Core.Adapters;
 /// Adapter that wraps a SeederDbContext to implement ISeederDbContext.
 /// </summary>
 /// <typeparam name="TUserContext">The user's DbContext type.</typeparam>
-public class SeederDbContextAdapter<TUserContext> : ISeederDbContext where TUserContext : DbContext
+internal class SeederDbContextAdapter<TUserContext> : ISeederDbContext where TUserContext : DbContext
 {
     private readonly TUserContext _context;
 

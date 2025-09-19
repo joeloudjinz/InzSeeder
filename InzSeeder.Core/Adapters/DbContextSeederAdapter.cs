@@ -9,7 +9,7 @@ namespace InzSeeder.Core.Adapters;
 /// Adapter that wraps an existing DbContext to implement ISeederDbContext.
 /// </summary>
 /// <typeparam name="TContext">The type of the existing DbContext.</typeparam>
-public class DbContextSeederAdapter<TContext> : ISeederDbContext where TContext : DbContext
+internal class DbContextSeederAdapter<TContext> : ISeederDbContext where TContext : DbContext
 {
     private readonly TContext _context;
 

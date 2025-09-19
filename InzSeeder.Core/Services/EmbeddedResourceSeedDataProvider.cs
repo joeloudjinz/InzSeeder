@@ -9,7 +9,7 @@ namespace InzSeeder.Core.Services;
 /// <summary>
 /// Provides seed data from embedded resources.
 /// </summary>
-public class EmbeddedResourceSeedDataProvider : ISeedDataProvider
+internal class EmbeddedResourceSeedDataProvider : ISeedDataProvider
 {
     private readonly Assembly[] _assemblies;
     private readonly string[] _resourceNamespaces;
