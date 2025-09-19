@@ -2,6 +2,8 @@
 
 InzSeeder is a flexible, generic data seeding library for .NET applications that can be used to seed any database with initial data.
 
+[![Full Unit Tests](https://github.com/joeloudjinz/InzSeeder/actions/workflows/run-tests.yml/badge.svg)](https://github.com/joeloudjinz/InzSeeder/actions/workflows/run-tests.yml)
+
 ## Features
 
 - **Generic Design**: Works with any Entity Framework Core DbContext
