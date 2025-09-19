@@ -39,7 +39,7 @@ To get started with InzSeeder, you can either:
 
 2. Or clone this repository and explore the sample projects:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/joeloudjinz/InzSeeder.git
    cd InzSeeder
    ```
 
