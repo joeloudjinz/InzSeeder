@@ -23,8 +23,8 @@ The main library implementation.
 ### InzSeeder.Samples.InMemory
 A sample project demonstrating usage with an in-memory database.
 
-### InzSeeder.Samples.SQLite
-A sample project demonstrating usage with a SQLite database.
+### InzSeeder.Samples.Web
+A sample project demonstrating usage with a SQLite database in a web application.
 
 ## Quick Start
 
@@ -32,7 +32,7 @@ To get started with InzSeeder, you can either:
 
 1. Add the NuGet package to your project:
    ```bash
-   dotnet add package InzSeeder
+   dotnet add package Inz.Seeder
    ```
 
 2. Or clone this repository and explore the sample projects:
@@ -48,7 +48,7 @@ To get started with InzSeeder, you can either:
 Add the InzSeeder NuGet package to your project:
 
 ```bash
-dotnet add package InzSeeder
+dotnet add package Inz.Seeder
 ```
 
 ### 2. Create Your Data Models
@@ -60,6 +60,7 @@ public class Product
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -75,50 +76,45 @@ public class ProductSeedModel
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
     public decimal Price { get; set; }
 }
 ```
 
 ### 4. Create Custom Seeders
 
-Create custom seeders by inheriting from `BaseEntitySeeder<TEntity, TModel>`:
+Create custom seeders by implementing `IEntityDataSeeder<TEntity, TModel>`:
 
 ```csharp
-public class ProductSeeder : BaseEntitySeeder<Product, ProductSeedModel>
+public class ProductSeeder : IEntityDataSeeder<Product, ProductSeedModel>
 {
-    public ProductSeeder(
-        ISeedDataProvider seedDataProvider,
-        ISeederDbContext dbContext,
-        ILogger<ProductSeeder> logger,
-        SeederConfiguration? seedingSettings = null,
-        SeedingPerformanceMetricsService? performanceMetricsService = null
-    ) : base(seedDataProvider, dbContext, logger, seedingSettings, performanceMetricsService)
-    {
-    }
+    public string SeedName => "products";
 
-    public override string SeedName => "products";
-
-    // You can use other properties of different type based on your choice, like `string Key` 
-    protected override object GetBusinessKeyFromEntity(Product entity) => entity.Id;
+    public IEnumerable<Type> Dependencies { get; } = [];
 
     // You can use other properties of different type based on your choice, like `string Key`
-    protected override object GetBusinessKey(ProductSeedModel model) => model.Id;
+    public object GetBusinessKeyFromEntity(Product entity) => entity.Id;
 
-    protected override Product MapToEntity(ProductSeedModel model)
+    // You can use other properties of different type based on your choice, like `string Key`
+    public object GetBusinessKey(ProductSeedModel model) => model.Id;
+
+    public Product MapToEntity(ProductSeedModel model)
     {
         return new Product
         {
             Id = model.Id,
             Name = model.Name,
+            Description = model.Description,
             Price = model.Price,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
     }
 
-    protected override void UpdateEntity(Product existingEntity, ProductSeedModel model)
+    public void UpdateEntity(Product existingEntity, ProductSeedModel model)
     {
         existingEntity.Name = model.Name;
+        existingEntity.Description = model.Description;
         existingEntity.Price = model.Price;
         existingEntity.UpdatedAt = DateTime.UtcNow;
     }
@@ -135,19 +131,23 @@ Create JSON files in a `SeedData` folder in your project:
   {
     "id": 1,
     "name": "Laptop",
+    "description": "High-performance laptop",
     "price": 999.99
   },
   {
     "id": 2,
     "name": "Mouse",
+    "description": "Wireless mouse",
     "price": 29.99
-  },
-  {
-    "id": 3,
-    "name": "Keyboard",
-    "price": 79.99
   }
 ]
+```
+
+For environment-specific data, create files with environment suffixes:
+```json
+// SeedData/products.Development.json
+// SeedData/products.Production.json
+// SeedData/products.Test.json
 ```
 
 Configure your project to embed these files as resources:
@@ -166,7 +166,7 @@ Configure your project to embed these files as resources:
 
 ### 6. Configure Services
 
-In your application's startup code (Program.cs or Startup.cs), configure the InzSeeder services:
+In your application's startup code (Program.cs), configure the InzSeeder services:
 
 ```csharp
 using InzSeeder.Core.Extensions;
@@ -175,25 +175,15 @@ using InzSeeder.Core.Models;
 var builder = Host.CreateApplicationBuilder(args);
 
 // Configure your database context
-builder.Services.AddDbContext<YourDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<YourDbContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Create seeding configuration
 var seedingSettings = new SeederConfiguration
 {
-    Environment = "Development",
-    Profiles = new Dictionary<string, SeedingProfile>
+    Profile = new SeedingProfile
     {
-        ["Development"] = new()
-        {
-            EnabledSeeders = ["products", "users", "categories"],
-            StrictMode = false
-        },
-        ["Production"] = new()
-        {
-            EnabledSeeders = ["categories"],
-            StrictMode = true
-        }
+        EnabledSeeders = ["products", "users", "categories"],
+        StrictMode = false
     },
     BatchSettings = new SeederBatchSettings
     {
@@ -220,10 +210,6 @@ var host = builder.Build();
 Execute the seeding process using the convenient extension method:
 
 ```csharp
-await app.Services.RunInzSeeder(CancellationToken.None);
-```
-Or
-```csharp
 await host.Services.RunInzSeeder(CancellationToken.None);
 ```
 
@@ -239,43 +225,34 @@ InzSeeder supports environment-specific configurations and seed data:
 
 var seedingSettings = new SeederConfiguration
 {
-    Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development",
-    Profiles = new Dictionary<string, SeedingProfile>
+    Profile = new SeedingProfile
     {
-        ["Development"] = new()
-        {
-            EnabledSeeders = ["products", "users", "categories"],
-            StrictMode = false
-        },
-        ["Test"] = new()
-        {
-            EnabledSeeders = ["users"],
-            StrictMode = true
-        },
-        ["Production"] = new()
-        {
-            EnabledSeeders = ["categories"],
-            StrictMode = true
-        }
+        EnabledSeeders = ["products", "users", "categories"],
+        StrictMode = false
+    },
+    BatchSettings = new SeederBatchSettings
+    {
+        DefaultBatchSize = 100
     }
 };
 ```
 
+Environment is determined in this order:
+1. passed argument
+2. `SEEDING_ENVIRONMENT` environment variable
+3. `ASPNETCORE_ENVIRONMENT` environment variable
+
 ### 9. Advanced Configuration
 
-You can also configure batch processing and other advanced features:
+You can configure batch processing and other advanced features:
 
 ```csharp
 var seedingSettings = new SeederConfiguration
 {
-    Environment = "Development",
-    Profiles = new Dictionary<string, SeedingProfile>
+    Profile = new SeedingProfile
     {
-        ["Development"] = new()
-        {
-            EnabledSeeders = ["products", "users"],
-            StrictMode = false
-        }
+        EnabledSeeders = ["products", "users"],
+        StrictMode = false
     },
     BatchSettings = new SeederBatchSettings
     {
@@ -289,6 +266,33 @@ var seedingSettings = new SeederConfiguration
 };
 ```
 
+### 10. Environment-Aware Seeders
+
+For more control over which seeders run in which environments, you can implement `IEnvironmentAwareSeeder`:
+
+```csharp
+public class ProductSeeder : IEntityDataSeeder<Product, ProductSeedModel>, IEnvironmentAwareSeeder
+{
+    // ... other implementation details
+    
+    public bool ShouldRunInEnvironment(string environment)
+    {
+        // Only run in Development and Staging environments
+        return environment == "Development" || environment == "Staging";
+    }
+}
+```
+
+Alternatively, use the `[EnvironmentCompatibility]` attribute:
+
+```csharp
+[EnvironmentCompatibility(productionSafe: false, "Development", "Staging")]
+public class ProductSeeder : IEntityDataSeeder<Product, ProductSeedModel>
+{
+    // ... implementation
+}
+```
+
 ## Running the Sample Projects
 
 ### InMemory Sample
@@ -297,10 +301,10 @@ cd InzSeeder.Samples.InMemory
 dotnet run
 ```
 
-### SQLite Sample
+### Web Sample
 ```bash
-cd InzSeeder.Samples.SQLite
-dotnet run
+cd InzSeeder.Samples.Web
+dotnet run seedMode # seedMode indicate that the web project should be ran in seed mode
 ```
 
 ## Building and Testing
@@ -317,6 +321,7 @@ dotnet test
 
 To package as NuGet:
 ```bash
+cd InzSeeder.Core
 dotnet pack
 ```
 
@@ -325,6 +330,7 @@ dotnet pack
 1. **Use Business Keys**: Always implement proper business key identification in your seeders. They must be unique in value.
 2. **Environment Awareness**: Use environment-specific configurations for different deployment scenarios if necessary.
 3. **Batch Processing**: Configure appropriate batch sizes for large datasets if necessary.
+4. **Idempotency**: Design your seeders to be idempotent so they can be safely run multiple times.
 
 ## Contributing
 
