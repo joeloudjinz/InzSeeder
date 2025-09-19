@@ -10,7 +10,7 @@ namespace InzSeeder.Core.Services;
 /// </summary>
 public class SeedingProfileValidationService
 {
-    private readonly IEnumerable<IEntitySeeder> _seeders;
+    private readonly IEnumerable<IBaseEntityDataSeeder> _seeders;
     private readonly ILogger<SeedingProfileValidationService> _logger;
 
     /// <summary>
@@ -18,7 +18,7 @@ public class SeedingProfileValidationService
     /// </summary>
     /// <param name="seeders">The available seeders.</param>
     /// <param name="logger">The logger.</param>
-    public SeedingProfileValidationService(IEnumerable<IEntitySeeder> seeders, ILogger<SeedingProfileValidationService> logger)
+    public SeedingProfileValidationService(IEnumerable<IBaseEntityDataSeeder> seeders, ILogger<SeedingProfileValidationService> logger)
     {
         _seeders = seeders;
         _logger = logger;

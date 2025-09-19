@@ -1,13 +1,9 @@
-using InzSeeder.Core.Adapters;
-using InzSeeder.Core.Contracts;
+using InzSeeder.Core.Algorithms;
 using InzSeeder.Core.Models;
-using InzSeeder.Core.Orchestrators;
 using InzSeeder.Core.Services;
-using InzSeeder.Core.Tests.Data;
 using InzSeeder.Core.Tests.Factories;
 using InzSeeder.Core.Tests.Seeders;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace InzSeeder.Core.Tests.IntegrationTests;
 
@@ -43,23 +39,22 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
         // Arrange
         _dbContextWrapper.SetEnvironment("Development");
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var loggerFactory = new LoggerFactory();
         var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(EnvironmentSpecificAndStrictModeTests).Assembly);
+        var userSeeder = new UserSeeder();
 
-        var seeder = new UserSeeder(dataProvider, adapter, loggerFactory.CreateLogger<UserSeeder>());
+        var serviceProvider = _dbContextWrapper.CreateServiceProviderWithSeeders(dataProvider, [userSeeder]);
 
         // Act
-        await seeder.ExecuteAsync(CancellationToken.None);
+        await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
 
         // Assert
         var users = await context.Users.ToListAsync();
         Assert.Equal(2, users.Count);
-        
+
         // Verify that development-specific data was loaded
         Assert.Contains(users, u => u.Email == "dev.john.doe@example.com");
         Assert.Contains(users, u => u.Email == "dev.jane.smith@example.com");
-        
+
         // Verify that default data was NOT loaded
         Assert.DoesNotContain(users, u => u.Email == "john.doe@example.com");
         Assert.DoesNotContain(users, u => u.Email == "jane.smith@example.com");
@@ -78,23 +73,22 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
         // Arrange
         _dbContextWrapper.SetEnvironment("NonExistentEnvironment");
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var loggerFactory = new LoggerFactory();
         var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(EnvironmentSpecificAndStrictModeTests).Assembly);
+        var userSeeder = new UserSeeder();
 
-        var seeder = new UserSeeder(dataProvider, adapter, loggerFactory.CreateLogger<UserSeeder>());
+        var serviceProvider = _dbContextWrapper.CreateServiceProviderWithSeeders(dataProvider, [userSeeder]);
 
         // Act
-        await seeder.ExecuteAsync(CancellationToken.None);
+        await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
 
         // Assert
         var users = await context.Users.ToListAsync();
         Assert.Equal(2, users.Count);
-        
+
         // Verify that default data was loaded
         Assert.Contains(users, u => u.Email == "john.doe@example.com");
         Assert.Contains(users, u => u.Email == "jane.smith@example.com");
-        
+
         // Verify that environment-specific data was NOT loaded
         Assert.DoesNotContain(users, u => u.Email == "dev.john.doe@example.com");
         Assert.DoesNotContain(users, u => u.Email == "prod.john.doe@example.com");
@@ -111,14 +105,16 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
     public async Task LoadsCorrectEnvironmentSpecificDataForDifferentEnvironments()
     {
         // Test Production environment
-        await TestEnvironmentSpecificData("Production", 
+        await TestEnvironmentSpecificData("Production",
             ["prod.john.doe@example.com", "prod.jane.smith@example.com", "prod.bob.wilson@example.com"],
-            ["john.doe@example.com", "jane.smith@example.com"]);
-        
+            ["john.doe@example.com", "jane.smith@example.com"]
+        );
+
         // Test Staging environment (for Products)
         await TestEnvironmentSpecificProductData("Staging",
             ["Staging Laptop", "Staging Mouse"],
-            ["Laptop", "Mouse"]);
+            ["Laptop", "Mouse"]
+        );
     }
 
     private async Task TestEnvironmentSpecificData(string environment, string[] expectedEmails, string[] unexpectedEmails)
@@ -127,29 +123,30 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
         var dbContextWrapper = new TestDbContextWrapper();
         dbContextWrapper.SetEnvironment(environment);
         await dbContextWrapper.InitializeAsync();
-        
+
         try
         {
             var context = dbContextWrapper.Context;
-            var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-            var loggerFactory = new LoggerFactory();
             var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(EnvironmentSpecificAndStrictModeTests).Assembly);
+            var userSeeder = new UserSeeder();
 
-            var seeder = new UserSeeder(dataProvider, adapter, loggerFactory.CreateLogger<UserSeeder>());
+            var serviceProvider = dbContextWrapper.CreateServiceProviderWithSeeders(
+                dataProvider,
+                [userSeeder]);
 
             // Act
-            await seeder.ExecuteAsync(CancellationToken.None);
+            await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
 
             // Assert
             var users = await context.Users.ToListAsync();
             Assert.Equal(expectedEmails.Length, users.Count);
-            
+
             // Verify that environment-specific data was loaded
             foreach (var email in expectedEmails)
             {
                 Assert.Contains(users, u => u.Email == email);
             }
-            
+
             // Verify that other environment data was NOT loaded
             foreach (var email in unexpectedEmails)
             {
@@ -161,36 +158,35 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
             await dbContextWrapper.DisposeAsync();
         }
     }
-    
+
     private async Task TestEnvironmentSpecificProductData(string environment, string[] expectedNames, string[] unexpectedNames)
     {
         // Arrange
         var dbContextWrapper = new TestDbContextWrapper();
         dbContextWrapper.SetEnvironment(environment);
         await dbContextWrapper.InitializeAsync();
-        
+
         try
         {
             var context = dbContextWrapper.Context;
-            var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-            var loggerFactory = new LoggerFactory();
             var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(EnvironmentSpecificAndStrictModeTests).Assembly);
+            var productSeeder = new ProductSeeder();
 
-            var seeder = new ProductSeeder(dataProvider, adapter, loggerFactory.CreateLogger<ProductSeeder>());
+            var serviceProvider = dbContextWrapper.CreateServiceProviderWithSeeders(dataProvider, [productSeeder]);
 
             // Act
-            await seeder.ExecuteAsync(CancellationToken.None);
+            await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
 
             // Assert
             var products = await context.Products.ToListAsync();
             Assert.Equal(expectedNames.Length, products.Count);
-            
+
             // Verify that environment-specific data was loaded
             foreach (var name in expectedNames)
             {
                 Assert.Contains(products, p => p.Name == name);
             }
-            
+
             // Verify that other environment data was NOT loaded
             foreach (var name in unexpectedNames)
             {
@@ -216,16 +212,12 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
         // Arrange
         _dbContextWrapper.SetEnvironment("Test");
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var loggerFactory = new LoggerFactory();
         var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(EnvironmentSpecificAndStrictModeTests).Assembly);
 
         // Create multiple seeders
-        var userSeeder = new UserSeeder(dataProvider, adapter, loggerFactory.CreateLogger<UserSeeder>());
-        var productSeeder = new ProductSeeder(dataProvider, adapter, loggerFactory.CreateLogger<ProductSeeder>());
-        var userProfileSeeder = new UserProfileSeeder(dataProvider, adapter, loggerFactory.CreateLogger<UserProfileSeeder>());
-
-        var seeders = new List<IEntitySeeder> { userSeeder, productSeeder, userProfileSeeder };
+        var userSeeder = new UserSeeder();
+        var productSeeder = new ProductSeeder();
+        var userProfileSeeder = new UserProfileSeeder();
 
         // Configure strict mode with only Users seeder enabled
         var seederConfiguration = new SeederConfiguration
@@ -237,19 +229,14 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
             }
         };
 
-        // Create required services
-        var validationService = new SeedingProfileValidationService(seeders, loggerFactory.CreateLogger<SeedingProfileValidationService>());
-
-        // Create orchestrator
-        var orchestrator = new EnvironmentAwareSeedingOrchestrator(
-            seeders,
-            adapter,
-            seederConfiguration,
-            validationService,
-            loggerFactory.CreateLogger<EnvironmentAwareSeedingOrchestrator>());
+        // Create a service provider with all required services and seeders
+        var serviceProvider = _dbContextWrapper.CreateServiceProviderWithSeeders(
+            dataProvider,
+            [userSeeder, productSeeder, userProfileSeeder],
+            seederConfiguration);
 
         // Act
-        await orchestrator.SeedDataAsync(CancellationToken.None);
+        await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
 
         // Assert
         // Only Users should be seeded
@@ -260,7 +247,7 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
         // Users should be seeded (enabled)
         Assert.NotEmpty(users);
         Assert.Equal(2, users.Count); // Default Users.json data
-        
+
         // Products and UserProfiles should NOT be seeded (not enabled in strict mode)
         Assert.Empty(products);
         Assert.Empty(userProfiles);
@@ -279,15 +266,11 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
         // Arrange
         _dbContextWrapper.SetEnvironment("Test");
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var loggerFactory = new LoggerFactory();
         var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(EnvironmentSpecificAndStrictModeTests).Assembly);
 
         // Create multiple seeders
-        var userSeeder = new UserSeeder(dataProvider, adapter, loggerFactory.CreateLogger<UserSeeder>());
-        var productSeeder = new ProductSeeder(dataProvider, adapter, loggerFactory.CreateLogger<ProductSeeder>());
-
-        var seeders = new List<IEntitySeeder> { userSeeder, productSeeder };
+        var userSeeder = new UserSeeder();
+        var productSeeder = new ProductSeeder();
 
         // Configure strict mode with no explicitly enabled seeders
         var seederConfiguration = new SeederConfiguration
@@ -299,19 +282,14 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
             }
         };
 
-        // Create required services
-        var validationService = new SeedingProfileValidationService(seeders, loggerFactory.CreateLogger<SeedingProfileValidationService>());
-
-        // Create orchestrator
-        var orchestrator = new EnvironmentAwareSeedingOrchestrator(
-            seeders,
-            adapter,
-            seederConfiguration,
-            validationService,
-            loggerFactory.CreateLogger<EnvironmentAwareSeedingOrchestrator>());
+        // Create a service provider with all required services and seeders
+        var serviceProvider = _dbContextWrapper.CreateServiceProviderWithSeeders(
+            dataProvider,
+            [userSeeder, productSeeder],
+            seederConfiguration);
 
         // Act
-        await orchestrator.SeedDataAsync(CancellationToken.None);
+        await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
 
         // Assert
         // No seeders should be seeded (in strict mode, only explicitly enabled seeders will run)
@@ -335,15 +313,11 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
         // Arrange
         _dbContextWrapper.SetEnvironment("Production");
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var loggerFactory = new LoggerFactory();
         var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(EnvironmentSpecificAndStrictModeTests).Assembly);
 
         // Create multiple seeders
-        var userSeeder = new UserSeeder(dataProvider, adapter, loggerFactory.CreateLogger<UserSeeder>());
-        var productSeeder = new ProductSeeder(dataProvider, adapter, loggerFactory.CreateLogger<ProductSeeder>());
-
-        var seeders = new List<IEntitySeeder> { userSeeder, productSeeder };
+        var userSeeder = new UserSeeder();
+        var productSeeder = new ProductSeeder();
 
         // Configure strict mode with only Products seeder enabled
         var seederConfiguration = new SeederConfiguration
@@ -355,19 +329,11 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
             }
         };
 
-        // Create required services
-        var validationService = new SeedingProfileValidationService(seeders, loggerFactory.CreateLogger<SeedingProfileValidationService>());
-
-        // Create orchestrator
-        var orchestrator = new EnvironmentAwareSeedingOrchestrator(
-            seeders,
-            adapter,
-            seederConfiguration,
-            validationService,
-            loggerFactory.CreateLogger<EnvironmentAwareSeedingOrchestrator>());
+        // Create a service provider with all required services and seeders
+        var serviceProvider = _dbContextWrapper.CreateServiceProviderWithSeeders(dataProvider, [userSeeder, productSeeder], seederConfiguration);
 
         // Act
-        await orchestrator.SeedDataAsync(CancellationToken.None);
+        await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
 
         // Assert
         // Only Products should be seeded with Production-specific data
@@ -376,7 +342,7 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
 
         // Users should NOT be seeded (not enabled in strict mode)
         Assert.Empty(users);
-        
+
         // Products should be seeded with Production-specific data
         Assert.NotEmpty(products);
         Assert.Equal(3, products.Count); // Enterprise Laptop, Business Smartphone, Enterprise Tablet
@@ -398,14 +364,10 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
         // Arrange
         _dbContextWrapper.SetEnvironment("Test");
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var loggerFactory = new LoggerFactory();
         var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(EnvironmentSpecificAndStrictModeTests).Assembly);
 
         // Create actual seeders
-        var userSeeder = new UserSeeder(dataProvider, adapter, loggerFactory.CreateLogger<UserSeeder>());
-
-        var seeders = new List<IEntitySeeder> { userSeeder };
+        var userSeeder = new UserSeeder();
 
         // Configure strict mode with references to non-existent seeders
         var seederConfiguration = new SeederConfiguration
@@ -417,22 +379,11 @@ public class EnvironmentSpecificAndStrictModeTests : IAsyncLifetime
             }
         };
 
-        // Create required services
-        var validationService = new SeedingProfileValidationService(seeders, loggerFactory.CreateLogger<SeedingProfileValidationService>());
-
-        // Create orchestrator
-        var orchestrator = new EnvironmentAwareSeedingOrchestrator(
-            seeders,
-            adapter,
-            seederConfiguration,
-            validationService,
-            loggerFactory.CreateLogger<EnvironmentAwareSeedingOrchestrator>());
+        // Create a service provider with all required services and seeders
+        var serviceProvider = _dbContextWrapper.CreateServiceProviderWithSeeders(dataProvider, [userSeeder], seederConfiguration);
 
         // Act & Assert
         // The validation should fail due to the non-existent seeder reference
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-        {
-            await orchestrator.SeedDataAsync(CancellationToken.None);
-        });
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => { await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None); });
     }
 }

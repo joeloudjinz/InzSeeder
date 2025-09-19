@@ -1,8 +1,8 @@
 using InzSeeder.Core.Extensions;
 using InzSeeder.Core.Models;
-using InzSeeder.Core.Utilities;
 using InzSeeder.Samples.InMemory.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -13,13 +13,14 @@ class Program
     static async Task Main(string[] args)
     {
         var builder = Host.CreateApplicationBuilder(args);
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+        // or Environment.SetEnvironmentVariable("SEEDING_ENVIRONMENT", "Development");
 
         // Configure the database context
         builder.Services.AddDbContext<AppDbContext>(options =>
         {
             // Using in-memory database for this example
-            options.UseInMemoryDatabase("SampleDb")
-                   .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning));
+            options.UseInMemoryDatabase("SampleDb").ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning));
         });
 
         // Create seeding settings
@@ -35,9 +36,6 @@ class Program
                 DefaultBatchSize = 100
             }
         };
-
-        // Determine environment
-        EnvironmentUtility.DetermineEnvironment("Development");
 
         // Add the seeder services with external configuration using fluent API
         builder.Services.AddInzSeeder(seedingSettings)

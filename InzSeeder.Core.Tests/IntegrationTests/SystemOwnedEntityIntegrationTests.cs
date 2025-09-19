@@ -1,18 +1,16 @@
-using InzSeeder.Core.Adapters;
+using InzSeeder.Core.Algorithms;
 using InzSeeder.Core.Services;
-using InzSeeder.Core.Tests.Data;
 using InzSeeder.Core.Tests.Entities;
 using InzSeeder.Core.Tests.Factories;
 using InzSeeder.Core.Tests.Seeders;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace InzSeeder.Core.Tests.IntegrationTests;
 
 /// <summary>
 /// Integration tests for system-owned entity functionality.
 /// </summary>
-public class SystemOwnedEntityIntegrationTests() : IAsyncLifetime
+public class SystemOwnedEntityIntegrationTests : IAsyncLifetime
 {
     private TestDbContextWrapper _dbContextWrapper = null!;
 
@@ -40,14 +38,15 @@ public class SystemOwnedEntityIntegrationTests() : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var logger = new LoggerFactory().CreateLogger<ProductSeeder>();
         var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(SystemOwnedEntityIntegrationTests).Assembly);
-
-        var seeder = new ProductSeeder(dataProvider, adapter, logger);
+        var productSeeder = new ProductSeeder();
+        
+        var serviceProvider = _dbContextWrapper.CreateServiceProviderWithSeeders(
+            dataProvider, 
+            [productSeeder]);
 
         // Act
-        await seeder.ExecuteAsync(CancellationToken.None);
+        await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
 
         // Assert
         var products = await context.Products.ToListAsync();
@@ -72,10 +71,9 @@ public class SystemOwnedEntityIntegrationTests() : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var logger = new LoggerFactory().CreateLogger<ProductSeeder>();
         var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(SystemOwnedEntityIntegrationTests).Assembly);
-
+        var productSeeder = new ProductSeeder();
+        
         // Pre-populate with an existing system-owned product that matches one in our seed data
         var existingProduct = new Product
         {
@@ -87,11 +85,13 @@ public class SystemOwnedEntityIntegrationTests() : IAsyncLifetime
         };
         context.Products.Add(existingProduct);
         await context.SaveChangesAsync();
-
-        var seeder = new ProductSeeder(dataProvider, adapter, logger);
+        
+        var serviceProvider = _dbContextWrapper.CreateServiceProviderWithSeeders(
+            dataProvider, 
+            [productSeeder]);
 
         // Act
-        await seeder.ExecuteAsync(CancellationToken.None);
+        await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
 
         // Assert
         var products = await context.Products.ToListAsync();

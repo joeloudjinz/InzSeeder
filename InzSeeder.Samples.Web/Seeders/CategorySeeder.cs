@@ -1,26 +1,18 @@
-using InzSeeder.Core.Abstractions;
 using InzSeeder.Core.Contracts;
-using InzSeeder.Core.Models;
-using InzSeeder.Core.Services;
 using InzSeeder.Samples.Web.Models;
 
 namespace InzSeeder.Samples.Web.Seeders;
 
-public class CategorySeeder(
-    ISeedDataProvider seedDataProvider,
-    ISeederDbContext dbContext,
-    ILogger<CategorySeeder> logger,
-    SeederConfiguration? seedingSettings = null,
-    SeedingPerformanceMetricsService? performanceMetricsService = null)
-    : BaseEntitySeeder<Category, CategorySeedModel>(seedDataProvider, dbContext, logger, seedingSettings, performanceMetricsService)
+public class CategorySeeder: IEntityDataSeeder<Category, CategorySeedModel>
 {
-    public override string SeedName => "categories";
+    public string SeedName => "categories";
+    public IEnumerable<Type> Dependencies { get; } = [];
 
-    protected override object GetBusinessKeyFromEntity(Category entity) => entity.Id;
+    public object GetBusinessKeyFromEntity(Category entity) => entity.Id;
 
-    protected override object GetBusinessKey(CategorySeedModel model) => model.Id;
+    public object GetBusinessKey(CategorySeedModel model) => model.Id;
 
-    protected override Category MapToEntity(CategorySeedModel model)
+    public Category MapToEntity(CategorySeedModel model)
     {
         return new Category
         {
@@ -33,7 +25,7 @@ public class CategorySeeder(
         };
     }
 
-    protected override void UpdateEntity(Category existingEntity, CategorySeedModel model)
+    public void UpdateEntity(Category existingEntity, CategorySeedModel model)
     {
         existingEntity.Name = model.Name;
         existingEntity.Slug = model.Slug;

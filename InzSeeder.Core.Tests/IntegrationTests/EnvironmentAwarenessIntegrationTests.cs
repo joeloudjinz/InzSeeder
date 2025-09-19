@@ -138,31 +138,25 @@ public class EnvironmentAwarenessIntegrationTests : IAsyncLifetime
 
     // Test seeder classes
     [EnvironmentCompatibility(true, "Production")]
-    private class ProductionSafeTestSeeder : IEntitySeeder
+    private class ProductionSafeTestSeeder : IBaseEntityDataSeeder
     {
         public string SeedName => "ProductionSafeTestSeeder";
 
         public IEnumerable<Type> Dependencies => [];
-
-        public Task ExecuteAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     [EnvironmentCompatibility(false, "Development")]
-    private class DevelopmentOnlyTestSeeder : IEntitySeeder
+    private class DevelopmentOnlyTestSeeder : IBaseEntityDataSeeder
     {
         public string SeedName => "DevelopmentOnlyTestSeeder";
 
         public IEnumerable<Type> Dependencies => [];
-
-        public Task ExecuteAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
-    private class RegularTestSeeder : IEntitySeeder
+    private class RegularTestSeeder : IBaseEntityDataSeeder
     {
         public string SeedName => "RegularTestSeeder";
 
         public IEnumerable<Type> Dependencies => [];
-
-        public Task ExecuteAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

@@ -1,10 +1,9 @@
-using InzSeeder.Core.Adapters;
+using InzSeeder.Core.Algorithms;
+using InzSeeder.Core.Models;
 using InzSeeder.Core.Services;
-using InzSeeder.Core.Tests.Data;
 using InzSeeder.Core.Tests.Factories;
 using InzSeeder.Core.Tests.Seeders;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace InzSeeder.Core.Tests.IntegrationTests;
 
@@ -65,17 +64,18 @@ public class HashBasedChangeDetectionTests : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var logger = new LoggerFactory().CreateLogger<UserSeeder>();
         var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(HashBasedChangeDetectionTests).Assembly);
-
-        var seeder = new UserSeeder(dataProvider, adapter, logger);
+        var userSeeder = new UserSeeder();
+        
+        var serviceProvider = _dbContextWrapper.CreateServiceProviderWithSeeders(
+            dataProvider, 
+            [userSeeder]);
 
         // Act
-        await seeder.ExecuteAsync(CancellationToken.None);
+        await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
 
         // Assert
-        var seedHistory = await context.Set<Models.SeedHistory>().ToListAsync();
+        var seedHistory = await context.Set<SeedHistory>().ToListAsync();
         Assert.Single(seedHistory);
         Assert.Equal("Users", seedHistory[0].SeedIdentifier);
         Assert.NotNull(seedHistory[0].ContentHash);
@@ -96,27 +96,28 @@ public class HashBasedChangeDetectionTests : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var logger = new LoggerFactory().CreateLogger<UserSeeder>();
         var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(HashBasedChangeDetectionTests).Assembly);
-
-        var seeder = new UserSeeder(dataProvider, adapter, logger);
+        var userSeeder = new UserSeeder();
+        
+        var serviceProvider = _dbContextWrapper.CreateServiceProviderWithSeeders(
+            dataProvider, 
+            [userSeeder]);
 
         // Act - Run seeder twice
-        await seeder.ExecuteAsync(CancellationToken.None);
+        await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
         
         // Record initial user count
         var initialUserCount = await context.Users.CountAsync();
         
         // Run again
-        await seeder.ExecuteAsync(CancellationToken.None);
+        await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
 
         // Assert
         var finalUserCount = await context.Users.CountAsync();
         Assert.Equal(initialUserCount, finalUserCount);
         
         // Check that only one SeedHistory record exists
-        var seedHistory = await context.Set<Models.SeedHistory>().ToListAsync();
+        var seedHistory = await context.Set<SeedHistory>().ToListAsync();
         Assert.Single(seedHistory);
     }
 }

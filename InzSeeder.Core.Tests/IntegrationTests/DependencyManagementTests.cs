@@ -1,11 +1,10 @@
-using InzSeeder.Core.Adapters;
+using InzSeeder.Core.Algorithms;
 using InzSeeder.Core.Contracts;
 using InzSeeder.Core.Services;
-using InzSeeder.Core.Tests.Data;
+using InzSeeder.Core.Tests.Entities;
 using InzSeeder.Core.Tests.Factories;
 using InzSeeder.Core.Tests.Seeders;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace InzSeeder.Core.Tests.IntegrationTests;
 
@@ -41,16 +40,13 @@ public class DependencyManagementTests : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var loggerFactory = new LoggerFactory();
-        var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(DependencyManagementTests).Assembly);
 
         // Create seeders with proper dependencies
-        var userSeeder = new UserSeeder(dataProvider, adapter, loggerFactory.CreateLogger<UserSeeder>());
-        var userProfileSeeder = new UserProfileSeeder(dataProvider, adapter, loggerFactory.CreateLogger<UserProfileSeeder>());
+        var userSeeder = new UserSeeder();
+        var userProfileSeeder = new UserProfileSeeder();
 
         // Create a list of seeders in wrong order to test dependency sorting
-        var seeders = new List<IEntitySeeder> { userProfileSeeder, userSeeder };
+        var seeders = new List<IBaseEntityDataSeeder> { userProfileSeeder, userSeeder };
 
         // Sort seeders using the SeederSorter
         var sortedSeeders = SeederSorter.Sort(seeders);
@@ -58,7 +54,14 @@ public class DependencyManagementTests : IAsyncLifetime
         // Act
         foreach (var seeder in sortedSeeders)
         {
-            await seeder.ExecuteAsync(CancellationToken.None);
+            if (seeder is IEntityDataSeeder<User, UserSeedModel> userEntitySeeder)
+            {
+                await SeederExecutor.Execute(userEntitySeeder, _dbContextWrapper.ServiceProvider, CancellationToken.None);
+            }
+            else if (seeder is IEntityDataSeeder<UserProfile, UserProfileSeedModel> userProfileEntitySeeder)
+            {
+                await SeederExecutor.Execute(userProfileEntitySeeder, _dbContextWrapper.ServiceProvider, CancellationToken.None);
+            }
         }
 
         // Assert
@@ -97,7 +100,7 @@ public class DependencyManagementTests : IAsyncLifetime
         var circularSeeder1 = new CircularTestSeeder1();
         var circularSeeder2 = new CircularTestSeeder2();
 
-        var seeders = new List<IEntitySeeder> { circularSeeder1, circularSeeder2 };
+        var seeders = new List<IBaseEntityDataSeeder> { circularSeeder1, circularSeeder2 };
 
         // Act & Assert
         var exception = Assert.Throws<InvalidOperationException>(() => SeederSorter.Sort(seeders));
@@ -105,21 +108,17 @@ public class DependencyManagementTests : IAsyncLifetime
     }
 
     // Test seeders with circular dependencies
-    private class CircularTestSeeder1 : IEntitySeeder
+    private class CircularTestSeeder1 : IBaseEntityDataSeeder
     {
         public string SeedName => "CircularTestSeeder1";
 
         public IEnumerable<Type> Dependencies => [typeof(CircularTestSeeder2)];
-
-        public Task ExecuteAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
-    private class CircularTestSeeder2 : IEntitySeeder
+    private class CircularTestSeeder2 : IBaseEntityDataSeeder
     {
         public string SeedName => "CircularTestSeeder2";
 
         public IEnumerable<Type> Dependencies => [typeof(CircularTestSeeder1)];
-
-        public Task ExecuteAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

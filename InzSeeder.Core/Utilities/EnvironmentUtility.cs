@@ -3,7 +3,7 @@ namespace InzSeeder.Core.Utilities;
 /// <summary>
 /// Utility class for environment detection and validation in the seeder application.
 /// </summary>
-public static class EnvironmentUtility
+internal static class EnvironmentUtility
 {
     private static string? _environment;
 
@@ -50,7 +50,7 @@ public static class EnvironmentUtility
             _environment = dotnetEnvVar;
             return dotnetEnvVar;
         }
-
+        
         throw new NullReferenceException("Environment is not specified");
     }
     

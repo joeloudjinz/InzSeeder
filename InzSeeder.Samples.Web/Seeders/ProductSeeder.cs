@@ -1,26 +1,18 @@
-using InzSeeder.Core.Abstractions;
 using InzSeeder.Core.Contracts;
-using InzSeeder.Core.Models;
-using InzSeeder.Core.Services;
 using InzSeeder.Samples.Web.Models;
 
 namespace InzSeeder.Samples.Web.Seeders;
 
-public class ProductSeeder(
-    ISeedDataProvider seedDataProvider,
-    ISeederDbContext dbContext,
-    ILogger<ProductSeeder> logger,
-    SeederConfiguration? seedingSettings = null,
-    SeedingPerformanceMetricsService? performanceMetricsService = null
-) : BaseEntitySeeder<Product, ProductSeedModel>(seedDataProvider, dbContext, logger, seedingSettings, performanceMetricsService)
+public class ProductSeeder : IEntityDataSeeder<Product, ProductSeedModel>
 {
-    public override string SeedName => "products";
+    public string SeedName => "products";
+    public IEnumerable<Type> Dependencies { get; } = [];
 
-    protected override object GetBusinessKeyFromEntity(Product entity) => entity.Id;
+    public object GetBusinessKeyFromEntity(Product entity) => entity.Id;
 
-    protected override object GetBusinessKey(ProductSeedModel model) => model.Id;
+    public object GetBusinessKey(ProductSeedModel model) => model.Id;
 
-    protected override Product MapToEntity(ProductSeedModel model)
+    public Product MapToEntity(ProductSeedModel model)
     {
         return new Product
         {
@@ -33,7 +25,7 @@ public class ProductSeeder(
         };
     }
 
-    protected override void UpdateEntity(Product existingEntity, ProductSeedModel model)
+    public void UpdateEntity(Product existingEntity, ProductSeedModel model)
     {
         existingEntity.Name = model.Name;
         existingEntity.Description = model.Description;

@@ -1,4 +1,6 @@
+using InzSeeder.Core.Algorithms;
 using InzSeeder.Core.Contracts;
+using InzSeeder.Core.Models;
 using InzSeeder.Core.Services;
 using InzSeeder.Core.Tests.Factories;
 using Microsoft.Extensions.Logging;
@@ -40,7 +42,7 @@ public class ServiceIntegrationTests : IAsyncLifetime
         var seederC = new TestSeederC(); // Depends on A
         var seederD = new TestSeederD(); // Depends on B and C
 
-        var seeders = new List<IEntitySeeder> { seederD, seederB, seederC, seederA }; // Deliberately out of order
+        var seeders = new List<IBaseEntityDataSeeder> { seederD, seederB, seederC, seederA }; // Deliberately out of order
 
         // Act
         var sortedSeeders = SeederSorter.Sort(seeders).ToList();
@@ -78,14 +80,14 @@ public class ServiceIntegrationTests : IAsyncLifetime
         // Arrange
         var seederA = new TestSeederA();
         var seederB = new TestSeederB();
-        var seeders = new List<IEntitySeeder> { seederA, seederB };
+        var seeders = new List<IBaseEntityDataSeeder> { seederA, seederB };
 
         var loggerFactory = new LoggerFactory();
         var validationService = new SeedingProfileValidationService(seeders, loggerFactory.CreateLogger<SeedingProfileValidationService>());
 
-        var seederConfiguration = new Models.SeederConfiguration
+        var seederConfiguration = new SeederConfiguration
         {
-            Profile = new Models.SeedingProfile
+            Profile = new SeedingProfile
             {
                 EnabledSeeders = ["TestSeederA", "TestSeederB"]
             }
@@ -111,14 +113,14 @@ public class ServiceIntegrationTests : IAsyncLifetime
     {
         // Arrange
         var seederA = new TestSeederA();
-        var seeders = new List<IEntitySeeder> { seederA };
+        var seeders = new List<IBaseEntityDataSeeder> { seederA };
 
         var loggerFactory = new LoggerFactory();
         var validationService = new SeedingProfileValidationService(seeders, loggerFactory.CreateLogger<SeedingProfileValidationService>());
 
-        var seederConfiguration = new Models.SeederConfiguration
+        var seederConfiguration = new SeederConfiguration
         {
-            Profile = new Models.SeedingProfile
+            Profile = new SeedingProfile
             {
                 EnabledSeeders = ["TestSeederA", "NonExistentSeeder"] // NonExistentSeeder doesn't exist
             }
@@ -133,39 +135,31 @@ public class ServiceIntegrationTests : IAsyncLifetime
     }
 
     // Test seeders with dependencies
-    private class TestSeederA : IEntitySeeder
+    private class TestSeederA : IBaseEntityDataSeeder
     {
         public string SeedName => "TestSeederA";
 
         public IEnumerable<Type> Dependencies => [];
-
-        public Task ExecuteAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
-    private class TestSeederB : IEntitySeeder
+    private class TestSeederB : IBaseEntityDataSeeder
     {
         public string SeedName => "TestSeederB";
 
         public IEnumerable<Type> Dependencies => [typeof(TestSeederA)];
-
-        public Task ExecuteAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
-    private class TestSeederC : IEntitySeeder
+    private class TestSeederC : IBaseEntityDataSeeder
     {
         public string SeedName => "TestSeederC";
 
         public IEnumerable<Type> Dependencies => [typeof(TestSeederA)];
-
-        public Task ExecuteAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
-    private class TestSeederD : IEntitySeeder
+    private class TestSeederD : IBaseEntityDataSeeder
     {
         public string SeedName => "TestSeederD";
 
         public IEnumerable<Type> Dependencies => [typeof(TestSeederB), typeof(TestSeederC)];
-
-        public Task ExecuteAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

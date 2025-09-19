@@ -1,27 +1,16 @@
-using InzSeeder.Core.Abstractions;
 using InzSeeder.Core.Contracts;
-using InzSeeder.Core.Models;
-using InzSeeder.Core.Services;
 using InzSeeder.Samples.InMemory.Models;
-using Microsoft.Extensions.Logging;
 
 namespace InzSeeder.Samples.InMemory.Seeders;
 
-public class ProductSeeder(
-    ISeedDataProvider seedDataProvider,
-    ISeederDbContext dbContext,
-    ILogger<ProductSeeder> logger,
-    SeederConfiguration? seedingSettings = null,
-    SeedingPerformanceMetricsService? performanceMetricsService = null)
-    : BaseEntitySeeder<Product, ProductSeedModel>(seedDataProvider, dbContext, logger, seedingSettings, performanceMetricsService)
+public class ProductSeeder : IEntityDataSeeder<Product, ProductSeedModel>
 {
-    public override string SeedName => "products";
+    public string SeedName => "products";
+    public IEnumerable<Type> Dependencies { get; } = [];
+    public object GetBusinessKeyFromEntity(Product entity) => entity.Id;
+    public object GetBusinessKey(ProductSeedModel model) => model.Id;
 
-    protected override object GetBusinessKeyFromEntity(Product entity) => entity.Id;
-
-    protected override object GetBusinessKey(ProductSeedModel model) => model.Id;
-
-    protected override Product MapToEntity(ProductSeedModel model)
+    public Product MapToEntity(ProductSeedModel model)
     {
         return new Product
         {
@@ -31,7 +20,7 @@ public class ProductSeeder(
         };
     }
 
-    protected override void UpdateEntity(Product existingEntity, ProductSeedModel model)
+    public void UpdateEntity(Product existingEntity, ProductSeedModel model)
     {
         existingEntity.Name = model.Name;
         existingEntity.Price = model.Price;

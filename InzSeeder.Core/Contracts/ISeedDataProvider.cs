@@ -3,7 +3,7 @@ namespace InzSeeder.Core.Contracts;
 /// <summary>
 /// Represents a provider that reads raw seed data content and calculates its hash.
 /// </summary>
-public interface ISeedDataProvider
+internal interface ISeedDataProvider
 {
     /// <summary>
     /// Gets the seed data content and its hash for the specified seed name.

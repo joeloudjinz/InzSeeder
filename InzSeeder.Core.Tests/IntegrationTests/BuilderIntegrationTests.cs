@@ -60,7 +60,6 @@ public class BuilderIntegrationTests : IAsyncLifetime
         // Assert
         // Verify that core services can be resolved
         Assert.NotNull(serviceProvider.GetService<SeederConfiguration>());
-        Assert.NotNull(serviceProvider.GetService<ISeedingOrchestrator>());
         Assert.NotNull(serviceProvider.GetService<SeedingPerformanceMetricsService>());
         Assert.NotNull(serviceProvider.GetService<SeedingProfileValidationService>());
     }
@@ -125,7 +124,7 @@ public class BuilderIntegrationTests : IAsyncLifetime
 
         // Assert
         // Verify that seeders can be resolved
-        var seeders = serviceProvider.GetServices<IEntitySeeder>().ToList();
+        var seeders = serviceProvider.GetServices<IBaseEntityDataSeeder>().ToList();
         Assert.NotEmpty(seeders);
 
         // Check that our test seeders are registered

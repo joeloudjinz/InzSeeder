@@ -1,14 +1,9 @@
-using InzSeeder.Core.Adapters;
-using InzSeeder.Core.Contracts;
-using InzSeeder.Core.Models;
-using InzSeeder.Core.Orchestrators;
+using InzSeeder.Core.Algorithms;
 using InzSeeder.Core.Services;
-using InzSeeder.Core.Tests.Data;
 using InzSeeder.Core.Tests.Entities;
 using InzSeeder.Core.Tests.Factories;
 using InzSeeder.Core.Tests.Seeders;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace InzSeeder.Core.Tests.IntegrationTests;
 
@@ -43,31 +38,20 @@ public class EndToEndIntegrationTests : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var loggerFactory = new LoggerFactory();
         var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(EndToEndIntegrationTests).Assembly);
-
+        
         // Create seeders
-        var userSeeder = new UserSeeder(dataProvider, adapter, loggerFactory.CreateLogger<UserSeeder>());
-        var userProfileSeeder = new UserProfileSeeder(dataProvider, adapter, loggerFactory.CreateLogger<UserProfileSeeder>());
-        var productSeeder = new ProductSeeder(dataProvider, adapter, loggerFactory.CreateLogger<ProductSeeder>());
+        var userSeeder = new UserSeeder();
+        var userProfileSeeder = new UserProfileSeeder();
+        var productSeeder = new ProductSeeder();
 
-        var seeders = new List<IEntitySeeder> { userSeeder, userProfileSeeder, productSeeder };
-
-        // Create required services
-        var validationService = new SeedingProfileValidationService(seeders, loggerFactory.CreateLogger<SeedingProfileValidationService>());
-        var seederConfiguration = new SeederConfiguration();
-
-        // Create orchestrator
-        var orchestrator = new EnvironmentAwareSeedingOrchestrator(
-            seeders,
-            adapter,
-            seederConfiguration,
-            validationService,
-            loggerFactory.CreateLogger<EnvironmentAwareSeedingOrchestrator>());
+        // Create a service provider with all required services and seeders
+        var serviceProvider = _dbContextWrapper.CreateServiceProviderWithSeeders(
+            dataProvider, 
+            [userSeeder, userProfileSeeder, productSeeder]);
 
         // Act
-        await orchestrator.SeedDataAsync(CancellationToken.None);
+        await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
 
         // Assert
         var users = await context.Users.ToListAsync();
@@ -102,8 +86,6 @@ public class EndToEndIntegrationTests : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var loggerFactory = new LoggerFactory();
         var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(EndToEndIntegrationTests).Assembly);
 
         // Pre-populate with some existing data
@@ -118,25 +100,16 @@ public class EndToEndIntegrationTests : IAsyncLifetime
         await context.SaveChangesAsync();
 
         // Create seeders
-        var userSeeder = new UserSeeder(dataProvider, adapter, loggerFactory.CreateLogger<UserSeeder>());
-        var productSeeder = new ProductSeeder(dataProvider, adapter, loggerFactory.CreateLogger<ProductSeeder>());
+        var userSeeder = new UserSeeder();
+        var productSeeder = new ProductSeeder();
 
-        var seeders = new List<IEntitySeeder> { userSeeder, productSeeder };
-
-        // Create required services
-        var validationService = new SeedingProfileValidationService(seeders, loggerFactory.CreateLogger<SeedingProfileValidationService>());
-        var seederConfiguration = new SeederConfiguration();
-
-        // Create orchestrator
-        var orchestrator = new EnvironmentAwareSeedingOrchestrator(
-            seeders,
-            adapter,
-            seederConfiguration,
-            validationService,
-            loggerFactory.CreateLogger<EnvironmentAwareSeedingOrchestrator>());
+        // Create a service provider with all required services and seeders
+        var serviceProvider = _dbContextWrapper.CreateServiceProviderWithSeeders(
+            dataProvider, 
+            [userSeeder, productSeeder]);
 
         // Act
-        await orchestrator.SeedDataAsync(CancellationToken.None);
+        await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, CancellationToken.None);
 
         // Assert
         // Verify users - should still have 2, with the existing one updated

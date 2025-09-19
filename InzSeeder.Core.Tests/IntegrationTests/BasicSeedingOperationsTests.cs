@@ -1,12 +1,10 @@
-using InzSeeder.Core.Adapters;
+using InzSeeder.Core.Algorithms;
 using InzSeeder.Core.Contracts;
-using InzSeeder.Core.Services;
-using InzSeeder.Core.Tests.Data;
+using InzSeeder.Core.Models;
 using InzSeeder.Core.Tests.Entities;
 using InzSeeder.Core.Tests.Factories;
 using InzSeeder.Core.Tests.Seeders;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace InzSeeder.Core.Tests.IntegrationTests;
 
@@ -41,14 +39,10 @@ public class BasicSeedingOperationsTests : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var logger = new LoggerFactory().CreateLogger<UserSeeder>();
-        var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(BasicSeedingOperationsTests).Assembly);
-
-        var seeder = new UserSeeder(dataProvider, adapter, logger);
+        var seeder = new UserSeeder();
 
         // Act
-        await seeder.ExecuteAsync(CancellationToken.None);
+        await SeederExecutor.Execute(seeder, _dbContextWrapper.ServiceProvider, CancellationToken.None);
 
         // Assert
         var users = await context.Users.ToListAsync();
@@ -69,9 +63,8 @@ public class BasicSeedingOperationsTests : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var logger = new LoggerFactory().CreateLogger<UserSeeder>();
-        var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(BasicSeedingOperationsTests).Assembly);
+        //
+        var seeder = new UserSeeder();
 
         // Pre-populate with existing user that matches seed data
         var existingUser = new User
@@ -83,10 +76,8 @@ public class BasicSeedingOperationsTests : IAsyncLifetime
         context.Users.Add(existingUser);
         await context.SaveChangesAsync();
 
-        var seeder = new UserSeeder(dataProvider, adapter, logger);
-
         // Act
-        await seeder.ExecuteAsync(CancellationToken.None);
+        await SeederExecutor.Execute(seeder, _dbContextWrapper.ServiceProvider, CancellationToken.None);
 
         // Assert
         var users = await context.Users.ToListAsync();
@@ -112,20 +103,17 @@ public class BasicSeedingOperationsTests : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var logger = new LoggerFactory().CreateLogger<UserSeeder>();
-        var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(BasicSeedingOperationsTests).Assembly);
-
-        var seeder = new UserSeeder(dataProvider, adapter, logger);
+        //
+        var seeder = new UserSeeder();
 
         // Act - Run seeder twice
-        await seeder.ExecuteAsync(CancellationToken.None);
-        await seeder.ExecuteAsync(CancellationToken.None);
+        await SeederExecutor.Execute(seeder, _dbContextWrapper.ServiceProvider, CancellationToken.None);
+        await SeederExecutor.Execute(seeder, _dbContextWrapper.ServiceProvider, CancellationToken.None);
 
         // Assert
         var users = await context.Users.ToListAsync();
         Assert.Equal(2, users.Count);
-        var seedHistory = await context.Set<Models.SeedHistory>().ToListAsync();
+        var seedHistory = await context.Set<SeedHistory>().ToListAsync();
         Assert.Single(seedHistory);
     }
 
@@ -141,14 +129,10 @@ public class BasicSeedingOperationsTests : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var logger = new LoggerFactory().CreateLogger<UserSeeder>();
-        var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(BasicSeedingOperationsTests).Assembly);
-
-        var seeder = new UserSeeder(dataProvider, adapter, logger);
+        var seeder = new UserSeeder();
 
         // First run
-        await seeder.ExecuteAsync(CancellationToken.None);
+        await SeederExecutor.Execute(seeder, _dbContextWrapper.ServiceProvider, CancellationToken.None);
 
         // Assert initial state
         var users = await context.Users.ToListAsync();
@@ -157,18 +141,18 @@ public class BasicSeedingOperationsTests : IAsyncLifetime
         Assert.Contains(users, u => u is { Email: "jane.smith@example.com", Name: "Jane Smith" });
 
         // Check seed history
-        var seedHistory = await context.Set<Models.SeedHistory>().ToListAsync();
+        var seedHistory = await context.Set<SeedHistory>().ToListAsync();
         Assert.Single(seedHistory);
         var originalHash = seedHistory[0].ContentHash;
 
         // Create a custom data provider with modified content
         var modifiedDataProvider = new ModifiedContentSeedDataProvider();
 
-        // Create a new seeder with the modified data provider
-        var modifiedSeeder = new UserSeeder(modifiedDataProvider, adapter, logger);
+        // Create a new service provider with the modified data provider
+        var modifiedServiceProvider = _dbContextWrapper.CreateServiceProvider(modifiedDataProvider);
 
         // Act - Run with modified data
-        await modifiedSeeder.ExecuteAsync(CancellationToken.None);
+        await SeederExecutor.Execute(seeder, modifiedServiceProvider, CancellationToken.None);
 
         // Assert - Verify that re-seeding occurred with new data
         var updatedUsers = await context.Users.ToListAsync();
@@ -184,7 +168,7 @@ public class BasicSeedingOperationsTests : IAsyncLifetime
         Assert.Contains(updatedUsers, u => u is { Email: "bob.wilson@example.com", Name: "Bob Wilson" });
         
         // Verify that seed history was updated with new hash
-        var updatedSeedHistory = await context.Set<Models.SeedHistory>().ToListAsync();
+        var updatedSeedHistory = await context.Set<SeedHistory>().ToListAsync();
         Assert.Single(updatedSeedHistory);
         Assert.NotEqual(originalHash, updatedSeedHistory[0].ContentHash); // Hash should have changed
         // Applied date should be newer or equal (allowing for same timestamp due to fast execution)
@@ -233,18 +217,10 @@ public class BasicSeedingOperationsTests : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var logger = new LoggerFactory().CreateLogger<UserSeeder>();
-        var dataProvider = new EmbeddedResourceSeedDataProvider(typeof(BasicSeedingOperationsTests).Assembly);
-
-        // Create a seeder for a non-existent seed data
-        var seeder = new UserSeeder(dataProvider, adapter, logger);
-
-        // Override the seed name to something that doesn't exist
-        var testSeeder = new TestUserSeeder("NonExistentSeed", dataProvider, adapter, logger);
+        var seeder = new TestUserSeeder("NonExistentSeed");
 
         // Act
-        await testSeeder.ExecuteAsync(CancellationToken.None);
+        await SeederExecutor.Execute(seeder, _dbContextWrapper.ServiceProvider, CancellationToken.None);
 
         // Assert
         var users = await context.Users.ToListAsync();
@@ -252,12 +228,7 @@ public class BasicSeedingOperationsTests : IAsyncLifetime
     }
 
     // Test-specific seeder that allows us to override the seed name
-    private class TestUserSeeder(
-        string seedName,
-        ISeedDataProvider seedDataProvider,
-        ISeederDbContext dbContext,
-        ILogger<UserSeeder> logger)
-        : UserSeeder(seedDataProvider, dbContext, logger)
+    private class TestUserSeeder(string seedName) : UserSeeder
     {
         public override string SeedName => seedName;
     }

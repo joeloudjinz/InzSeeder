@@ -1,15 +1,13 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using InzSeeder.Core.Adapters;
+using InzSeeder.Core.Algorithms;
 using InzSeeder.Core.Contracts;
 using InzSeeder.Core.Models;
-using InzSeeder.Core.Tests.Data;
 using InzSeeder.Core.Tests.Entities;
 using InzSeeder.Core.Tests.Factories;
 using InzSeeder.Core.Tests.Seeders;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace InzSeeder.Core.Tests.IntegrationTests;
 
@@ -44,17 +42,12 @@ public class BatchProcessingTests : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var logger = new LoggerFactory().CreateLogger<UserSeeder>();
-
-        // Create a data provider with a large dataset
         var dataProvider = new LargeDataSetSeedDataProvider();
-
-        // Use default settings (batch size 100)
-        var seeder = new UserSeeder(dataProvider, adapter, logger);
+        var serviceProvider = _dbContextWrapper.CreateServiceProvider(dataProvider);
+        var seeder = new UserSeeder();
 
         // Act
-        await seeder.ExecuteAsync(CancellationToken.None);
+        await SeederExecutor.Execute(seeder, serviceProvider, CancellationToken.None);
 
         // Assert
         var users = await context.Users.ToListAsync();
@@ -77,12 +70,8 @@ public class BatchProcessingTests : IAsyncLifetime
     {
         // Arrange
         var context = _dbContextWrapper.Context;
-        var adapter = new SeederDbContextAdapter<TestDbContext>(context);
-        var logger = new LoggerFactory().CreateLogger<UserSeeder>();
-
-        // Create a data provider with a medium dataset
         var dataProvider = new MediumDataSetSeedDataProvider();
-
+        
         // Configure custom batch size
         var seederSettings = new SeederConfiguration
         {
@@ -92,11 +81,12 @@ public class BatchProcessingTests : IAsyncLifetime
                 SeederBatchSizes = new Dictionary<string, int> { { "Users", 25 } }
             }
         };
-
-        var seeder = new UserSeeder(dataProvider, adapter, logger, seederSettings);
+        
+        var serviceProvider = _dbContextWrapper.CreateServiceProvider(dataProvider, seederSettings);
+        var seeder = new UserSeeder();
 
         // Act
-        await seeder.ExecuteAsync(CancellationToken.None);
+        await SeederExecutor.Execute(seeder, serviceProvider, CancellationToken.None);
 
         // Assert
         var users = await context.Users.ToListAsync();
@@ -118,8 +108,7 @@ public class BatchProcessingTests : IAsyncLifetime
     {
         public Task<(string? content, string? hash)> GetSeedDataAsync(string seedName, CancellationToken cancellationToken)
         {
-            if (seedName != "Users")
-                return Task.FromResult<(string? content, string? hash)>((null, null));
+            if (seedName != "Users") return Task.FromResult<(string? content, string? hash)>((null, null));
 
             // Create a large dataset with 500 users
             var users = new List<UserSeedModel>();

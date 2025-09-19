@@ -1,32 +1,25 @@
-using InzSeeder.Core.Contracts;
+using InzSeeder.Core.Algorithms;
 using InzSeeder.Core.Utilities;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace InzSeeder.Core.Extensions;
 
 /// <summary>
-/// Extension methods for IServiceProvider to work with InzSeeder.
+/// Provides extension methods for <see cref="IServiceProvider"/> to interact with InzSeeder.
 /// </summary>
 public static class ServiceProviderExtensions
 {
     /// <summary>
-    /// Seeds all registered data using the InzSeeder orchestrator.
-    /// This method retrieves the ISeedingOrchestrator from the service provider and executes the seeding process.
+    /// Executes the data seeding process.
     /// </summary>
-    /// <param name="serviceProvider">The service provider to retrieve the seeder from.</param>
-    /// <param name="cancellationToken">A token to cancel the operation.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when serviceProvider is null.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when ISeedingOrchestrator is not registered in the service provider.</exception>
+    /// <param name="serviceProvider">The service provider containing the registered seeder services.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous seeding operation.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="serviceProvider"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown if required seeder services are not registered.</exception>
     public static async Task RunInzSeeder(this IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(serviceProvider);
-
         EnvironmentUtility.DetermineEnvironment();
-        
-        var seeder = serviceProvider.GetService<ISeedingOrchestrator>() 
-            ?? throw new InvalidOperationException("ISeedingOrchestrator is not registered. Please ensure AddInzSeeder() is called during service registration.");
-        
-        await seeder.SeedDataAsync(cancellationToken);
+        await EnvironmentSeedingOrchestrator.Orchestrate(serviceProvider, cancellationToken);
     }
 }

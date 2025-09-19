@@ -1,26 +1,18 @@
-using InzSeeder.Core.Abstractions;
 using InzSeeder.Core.Contracts;
-using InzSeeder.Core.Models;
-using InzSeeder.Core.Services;
 using InzSeeder.Samples.Web.Models;
 
 namespace InzSeeder.Samples.Web.Seeders;
 
-public class UserSeeder(
-    ISeedDataProvider seedDataProvider,
-    ISeederDbContext dbContext,
-    ILogger<UserSeeder> logger,
-    SeederConfiguration? seedingSettings = null,
-    SeedingPerformanceMetricsService? performanceMetricsService = null
-) : BaseEntitySeeder<User, UserSeedModel>(seedDataProvider, dbContext, logger, seedingSettings, performanceMetricsService)
+public class UserSeeder: IEntityDataSeeder<User, UserSeedModel>
 {
-    public override string SeedName => "users";
+    public string SeedName => "users";
+    public IEnumerable<Type> Dependencies { get; } = [];
 
-    protected override object GetBusinessKeyFromEntity(User entity) => entity.Id;
+    public object GetBusinessKeyFromEntity(User entity) => entity.Id;
 
-    protected override object GetBusinessKey(UserSeedModel model) => model.Id;
+    public object GetBusinessKey(UserSeedModel model) => model.Id;
 
-    protected override User MapToEntity(UserSeedModel model)
+    public User MapToEntity(UserSeedModel model)
     {
         return new User
         {
@@ -34,7 +26,7 @@ public class UserSeeder(
         };
     }
 
-    protected override void UpdateEntity(User existingEntity, UserSeedModel model)
+    public void UpdateEntity(User existingEntity, UserSeedModel model)
     {
         existingEntity.FirstName = model.FirstName;
         existingEntity.LastName = model.LastName;
