@@ -1,31 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <OutputType>Exe</OutputType>
+        <OutputType>Library</OutputType>
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageId>Inz.Seeder</PackageId>
-        <PackageVersion>1.0.0</PackageVersion>
-        <Authors>Your Name</Authors>
-        <Company>Your Company</Company>
+        <PackageVersion>0.9.0</PackageVersion>
+        <Authors>Abdellah Addoun</Authors>
+        <Company>Inz Softwares</Company>
         <Product>Inz Seeder</Product>
-        <Description>A flexible data seeding library for .NET applications</Description>
-        <PackageTags>seeding;entity-framework;data;database</PackageTags>
+        <Description>
+            A powerful and flexible data seeding library for .NET applications, designed to streamline the process of populating databases with test
+            or initial data. It supports environment-specific data, dependency management between seeders, batch processing for large datasets,
+            and hash-based change detection to avoid redundant seeding. It is highly configurable and integrates seamlessly with
+            Entity Framework Core.
+        </Description>
+        <PackageTags>
+            seeding;seeder;database;data;entity-framework-core;ef-core;efcore;orm;sql;testing;test-data;development;automation;migrations;dotnet;csharp;environment-aware;data-provisioning
+        </PackageTags>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="SeedData\**\*.json"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.8" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.8" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
-        <PackageReference Include="Scrutor" Version="6.1.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.8"/>
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.8"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.8"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8"/>
+        <PackageReference Include="Scrutor" Version="6.1.0"/>
     </ItemGroup>
 </Project>

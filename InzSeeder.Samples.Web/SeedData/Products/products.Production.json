@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "name": "Enterprise Laptop",
+    "description": "Enterprise-grade laptop with security features",
+    "price": 2299.99
+  },
+  {
+    "id": 2,
+    "name": "Business Smartphone",
+    "description": "Business-oriented smartphone with productivity apps",
+    "price": 1199.99
+  }
+]

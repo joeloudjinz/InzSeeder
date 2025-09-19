@@ -1,0 +1,16 @@
+[
+  {
+    "id": 100,
+    "firstName": "Test",
+    "lastName": "User",
+    "email": "test.user@example.com",
+    "dateOfBirth": "1995-03-10T00:00:00Z"
+  },
+  {
+    "id": 101,
+    "firstName": "Test",
+    "lastName": "Admin",
+    "email": "test.admin@example.com",
+    "dateOfBirth": "1988-07-19T00:00:00Z"
+  }
+]

@@ -13,130 +13,75 @@ InzSeeder is a flexible, generic data seeding library for .NET applications that
 - **Audit Logging**: Tracks all seeding operations
 - **Hash-Based Change Detection**: Only re-seeds when data changes
 - **Extensible Architecture**: Easy to create custom seeders
-- **Command-Line Interface**: Rich CLI with preview, dry-run, and health check modes
 
 ## Project Structure
 
-The solution contains two main projects:
+The solution contains the following projects:
 
 1. **InzSeeder.Core** - The main library implementation
-2. **InzSeeder.Samples.InMemory** - A sample project demonstrating usage with an in-memory database
+2. **InzSeeder.Core.Tests** - Unit and integration tests for the core library
+3. **InzSeeder.Samples.InMemory** - A sample project demonstrating usage with an in-memory database
+4. **InzSeeder.Samples.Web** - A sample web project demonstrating usage with a SQLite database
 
 ### InzSeeder.Core
 This is the main library project that implements the data seeding functionality.
 
 Key files and directories:
-- `Program.cs` - Entry point with CLI argument parsing
 - `InzSeeder.Core.csproj` - Project configuration with NuGet package settings
-- `README.md` - Documentation and usage instructions
-- `appsettings*.json` - Configuration files
-- `Abstractions/` - Base classes like `BaseEntitySeeder`
-- `Contracts/` - Interfaces defining the core contracts
-- `SeedData/` - Directory for JSON seed data files (embedded as resources)
+- `Contracts/` - Interfaces defining the core contracts (IEntityDataSeeder, ISeedDataProvider, etc.)
+- `Extensions/` - Extension methods for service registration and execution
+- `Models/` - Configuration models (SeederConfiguration, SeedingProfile, etc.)
+- `Services/` - Core services (EmbeddedResourceSeedDataProvider, etc.)
+- `Algorithms/` - Core algorithms (EnvironmentSeedingOrchestrator, SeederExecutor, etc.)
+- `Attributes/` - Custom attributes (EnvironmentCompatibilityAttribute)
+- `Utilities/` - Utility classes (EnvironmentUtility)
+- `Builder/` - Fluent builder pattern implementation (SeederBuilder)
+
+### InzSeeder.Core.Tests
+Unit and integration tests for the core library.
+
+Key files and directories:
+- `InzSeeder.Core.Tests.csproj` - Test project configuration
+- `Entities/` - Test entity models
+- `Seeders/` - Test seeder implementations
+- `Data/` - Test DbContext implementations
+- `SeedData/` - Test seed data files
+- `IntegrationTests/` - Integration test suites
 
 ### InzSeeder.Samples.InMemory
-A sample project demonstrating how to use the InzSeeder library.
+A sample project demonstrating how to use the InzSeeder library with an in-memory database.
 
 Key files and directories:
 - `Program.cs` - Sample application entry point
 - `InzSeeder.Samples.InMemory.csproj` - Project configuration
-- `README.md` - Sample project documentation
 - `Models/` - Entity and seeder models
 - `Data/` - DbContext implementation
 - `Seeders/` - Custom seeder implementations
 - `SeedData/` - JSON seed data files
 
+### InzSeeder.Samples.Web
+A sample web project demonstrating how to use the InzSeeder library with a SQLite database in a web application.
+
+Key files and directories:
+- `Program.cs` - Sample web application entry point
+- `InzSeeder.Samples.Web.csproj` - Project configuration
+- `Models/` - Entity and seeder models
+- `Data/` - DbContext implementation
+- `Seeders/` - Custom seeder implementations
+- `SeedData/` - JSON seed data files with environment-specific variations
+- `Migrations/` - EF Core migrations
+- `appsettings*.json` - Configuration files
+
 ## Technology Stack
 
-- **Language**: C# (.NET 9.0)
-- **Framework**: .NET Core
+- **Language**: C# 13
+- **Framework**: .NET Core (Version 9)
 - **ORM**: Entity Framework Core
 - **Dependency Injection**: Microsoft.Extensions.DependencyInjection
 - **Configuration**: Microsoft.Extensions.Configuration
 - **Logging**: Microsoft.Extensions.Logging
-- **CLI Parsing**: Custom command-line argument parser
-
-## Core Concepts
-
-### BaseEntitySeeder
-The `BaseEntitySeeder<TEntity, TModel>` is an abstract base class that implements the template method pattern for entity seeders. It provides a complete implementation for:
-1. Loading seed data from JSON files
-2. Checking if data has already been seeded using hash-based change detection
-3. Deserializing JSON into model objects
-4. Fetching existing entities from the database
-5. Processing entities in batches
-6. Updating existing entities or creating new ones
-7. Recording seeding history
-
-### Interfaces
-- `IEntitySeeder` - Core interface for all seeders
-- `ISeedingOrchestrator` - Manages the overall seeding process
-- `ISeedDataProvider` - Provides seed data from various sources
-- `ISeederDbContext` - Database context interface
-
-## Usage Patterns
-
-### Creating a Custom Seeder
-To create a custom seeder, inherit from `BaseEntitySeeder` and implement the abstract methods:
-
-```csharp
-public class ProductSeeder : BaseEntitySeeder<Product, ProductSeedModel>
-{
-    public override string SeedName => "products";
-
-    protected override object GetBusinessKeyFromEntity(Product entity) => entity.Id;
-    
-    protected override object GetBusinessKey(ProductSeedModel model) => model.Id;
-    
-    protected override Product MapToEntity(ProductSeedModel model)
-    {
-        return new Product
-        {
-            Id = model.Id,
-            Name = model.Name,
-            Price = model.Price
-        };
-    }
-    
-    protected override void UpdateEntity(Product existingEntity, ProductSeedModel model)
-    {
-        existingEntity.Name = model.Name;
-        existingEntity.Price = model.Price;
-    }
-}
-```
-
-### Registration
-Register the seeder in your application:
-
-```csharp
-services.AddInzSeeder();
-services.AddScoped<IEntitySeeder, ProductSeeder>();
-```
-
-### Configuration
-The library supports environment-specific configurations through `appsettings.{Environment}.json` files:
-
-```json
-{
-  "Seeding": {
-    "Environment": "Local",
-    "BatchSettings": {
-      "DefaultBatchSize": 100,
-      "SeederBatchSizes": {
-        "users": 50,
-        "roles": 10
-      }
-    },
-    "Profiles": {
-      "Development": {
-        "EnabledSeeders": ["roles", "users"],
-        "StrictMode": false
-      }
-    }
-  }
-}
-```
+- **Testing**: xUnit, Microsoft.NET.Test.Sdk
+- **Code Coverage**: coverlet.collector
 
 ## Building and Running
 
@@ -153,24 +98,21 @@ dotnet test
 
 To package as NuGet:
 ```bash
+cd InzSeeder.Core
 dotnet pack
 ```
 
-### Sample Project
-To run the sample project:
+### Sample Projects
+To run the InMemory sample project:
 ```bash
 cd InzSeeder.Samples.InMemory
 dotnet run
 ```
 
-### CLI Usage
-The library provides a rich CLI with several options:
+To run the Web sample project in seed mode:
 ```bash
-dotnet run --project InzSeeder.Core
-dotnet run --project InzSeeder.Core -- --help
-dotnet run --project InzSeeder.Core -- --environment Production
-dotnet run --project InzSeeder.Core -- --preview
-dotnet run --project InzSeeder.Core -- --health-check
+cd InzSeeder.Samples.Web
+dotnet run seedMode
 ```
 
 ## Development Conventions
@@ -178,23 +120,27 @@ dotnet run --project InzSeeder.Core -- --health-check
 1. **Generic Design**: All components are designed to work with any Entity Framework Core DbContext
 2. **Idempotency**: Seeders can be run multiple times without creating duplicates
 3. **Dependency Injection**: Heavy use of Microsoft's DI container for service resolution
-4. **Configuration-Driven**: Behavior is controlled through configuration files
+4. **Configuration-Driven**: Behavior is controlled through programmatic configuration
 5. **Logging**: Comprehensive logging using Microsoft's logging framework
 6. **Error Handling**: Graceful error handling with meaningful error messages
 7. **Performance**: Batch processing for large datasets to optimize performance
+8. **Environment Awareness**: Support for environment-specific seeding configurations
 
 ## Key Implementation Details
 
 1. **Hash-Based Change Detection**: Uses content hashes to determine if seed data has changed
 2. **Batch Processing**: Processes entities in configurable batch sizes to handle large datasets efficiently
 3. **Business Key Pattern**: Uses business keys (rather than primary keys) to identify existing entities
-4. **Seeder Dependencies**: Supports dependency management between seeders
+4. **Seeder Dependencies**: Supports dependency management between seeders through the Dependencies property
 5. **Environment-Specific Seeding**: Allows different seeding behavior based on environment
 6. **Seeder Profiles**: Supports different seeder configurations for different environments
+7. **Strict Mode**: Configuration option to only run explicitly enabled seeders
+8. **Environment Compatibility**: Attribute-based and interface-based environment restrictions
 
 ## Extensibility Points
 
-1. **Custom Seeders**: Inherit from `BaseEntitySeeder` to create custom seeders
-2. **Custom Data Providers**: Implement `ISeedDataProvider` to load data from different sources
-3. **Custom DbContext**: Implement `ISeederDbContext` to work with custom database contexts
-4. **Custom Seeding Orchestrator**: Implement `ISeedingOrchestrator` to customize the seeding process flow
+1. **Custom Seeders**: Implement `IEntityDataSeeder<TEntity, TModel>` to create custom seeders
+2. **Environment-Aware Seeders**: Implement `IEnvironmentAwareSeeder` or use `EnvironmentCompatibilityAttribute`
+3. **Custom Data Providers**: Implement `ISeedDataProvider` to load data from different sources
+4. **Custom DbContext**: Implement `ISeederDbContext` to work with custom database contexts
+5. **Seeder Dependencies**: Specify dependencies between seeders using the Dependencies property

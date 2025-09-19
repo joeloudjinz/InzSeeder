@@ -5,7 +5,7 @@ namespace InzSeeder.Core.Services;
 /// <summary>
 /// Service for collecting performance metrics during seeding operations.
 /// </summary>
-public class SeedingPerformanceMetricsService
+internal class SeedingPerformanceMetricsService
 {
     private readonly ILogger<SeedingPerformanceMetricsService> _logger;
     private readonly Dictionary<string, SeedingMetrics> _metrics = new();
@@ -45,23 +45,23 @@ public class SeedingPerformanceMetricsService
     /// <param name="memoryUsageBytes">The memory usage in bytes.</param>
     public void StopMeasurement(string seederName, int itemCount = 0, long memoryUsageBytes = 0)
     {
-        if (_metrics.TryGetValue(seederName, out var metrics))
-        {
-            metrics.EndTime = DateTime.UtcNow;
-            metrics.Duration = metrics.EndTime - metrics.StartTime;
-            metrics.ItemCount = itemCount;
-            metrics.MemoryUsageBytes = memoryUsageBytes;
+        if (!_metrics.TryGetValue(seederName, out var metrics)) return;
 
-            _logger.LogInformation(
-                "Seeder '{SeederName}' performance metrics: Duration={DurationMs}ms, Items={ItemCount}, Memory={MemoryUsageBytes} bytes",
-                seederName,
-                metrics.Duration.TotalMilliseconds,
-                itemCount,
-                memoryUsageBytes);
+        metrics.EndTime = DateTime.UtcNow;
+        metrics.Duration = metrics.EndTime - metrics.StartTime;
+        metrics.ItemCount = itemCount;
+        metrics.MemoryUsageBytes = memoryUsageBytes;
 
-            // Remove the metrics from the dictionary as we've logged them
-            _metrics.Remove(seederName);
-        }
+        _logger.LogInformation(
+            "Seeder '{SeederName}' performance metrics: Duration={DurationMs}ms, Items={ItemCount}, Memory={MemoryUsageBytes} bytes",
+            seederName,
+            metrics.Duration.TotalMilliseconds,
+            itemCount,
+            memoryUsageBytes
+        );
+
+        // Remove the metrics from the dictionary as we've logged them
+        _metrics.Remove(seederName);
     }
 
     /// <summary>
@@ -113,7 +113,7 @@ public class SeedingMetrics
 /// <summary>
 /// A disposable token that stops measurement when disposed.
 /// </summary>
-public class SeedingMetricsToken : IDisposable
+internal class SeedingMetricsToken : IDisposable
 {
     private readonly SeedingPerformanceMetricsService _service;
     private readonly string _seederName;
@@ -135,12 +135,11 @@ public class SeedingMetricsToken : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        if (!_disposed)
-        {
-            var endMemory = GC.GetTotalMemory(false);
-            var memoryUsage = Math.Max(0, endMemory - _startMemory);
-            _service.StopMeasurement(_seederName, memoryUsageBytes: memoryUsage);
-            _disposed = true;
-        }
+        if (_disposed) return;
+
+        var endMemory = GC.GetTotalMemory(false);
+        var memoryUsage = Math.Max(0, endMemory - _startMemory);
+        _service.StopMeasurement(_seederName, memoryUsageBytes: memoryUsage);
+        _disposed = true;
     }
 }

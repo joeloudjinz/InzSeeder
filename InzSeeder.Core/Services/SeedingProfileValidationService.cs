@@ -1,5 +1,6 @@
 using InzSeeder.Core.Contracts;
 using InzSeeder.Core.Models;
+using InzSeeder.Core.Utilities;
 using Microsoft.Extensions.Logging;
 
 namespace InzSeeder.Core.Services;
@@ -7,9 +8,9 @@ namespace InzSeeder.Core.Services;
 /// <summary>
 /// Service for validating seeding profiles and configurations.
 /// </summary>
-public class SeedingProfileValidationService
+internal class SeedingProfileValidationService
 {
-    private readonly IEnumerable<IEntitySeeder> _seeders;
+    private readonly IEnumerable<IBaseEntityDataSeeder> _seeders;
     private readonly ILogger<SeedingProfileValidationService> _logger;
 
     /// <summary>
@@ -17,7 +18,7 @@ public class SeedingProfileValidationService
     /// </summary>
     /// <param name="seeders">The available seeders.</param>
     /// <param name="logger">The logger.</param>
-    public SeedingProfileValidationService(IEnumerable<IEntitySeeder> seeders, ILogger<SeedingProfileValidationService> logger)
+    public SeedingProfileValidationService(IEnumerable<IBaseEntityDataSeeder> seeders, ILogger<SeedingProfileValidationService> logger)
     {
         _seeders = seeders;
         _logger = logger;
@@ -28,7 +29,7 @@ public class SeedingProfileValidationService
     /// </summary>
     /// <param name="settings">The seeding settings to validate.</param>
     /// <returns>True if the settings are valid, false otherwise.</returns>
-    public bool ValidateSettings(SeedingSettings? settings)
+    public bool ValidateSettings(SeederConfiguration? settings)
     {
         if (settings == null)
         {
@@ -39,13 +40,7 @@ public class SeedingProfileValidationService
         // Get all seeder names
         var seederNames = _seeders.Select(s => s.SeedName).ToHashSet();
 
-        // Validate each profile
-        foreach (var (environment, profile) in settings.Profiles)
-        {
-            if (!ValidateProfile(environment, profile, seederNames)) return false;
-        }
-
-        return true;
+        return ValidateProfile(EnvironmentUtility.Environment(), settings.Profile, seederNames);
     }
 
     /// <summary>
@@ -68,10 +63,9 @@ public class SeedingProfileValidationService
         }
 
         // Validate environment name
-        var validEnvironments = new[] { "Development", "Staging", "Production" };
-        if (!validEnvironments.Contains(environment, StringComparer.OrdinalIgnoreCase))
+        if (!EnvironmentUtility.ValidEnvironments.Contains(environment, StringComparer.OrdinalIgnoreCase))
         {
-            _logger.LogWarning("Non-standard environment name detected: {Environment}", environment);
+            _logger.LogWarning("Non-standard environment name detected: {Environment}, supported environments are: {Envs}", environment, string.Join(", ", EnvironmentUtility.ValidEnvironments));
         }
 
         return true;

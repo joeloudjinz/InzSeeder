@@ -1,0 +1,14 @@
+[
+  {
+    "id": 4,
+    "name": "Development Laptop",
+    "description": "Laptop configured for software development",
+    "price": 1599.99
+  },
+  {
+    "id": 5,
+    "name": "Developer Smartphone",
+    "description": "Smartphone with developer tools",
+    "price": 1099.99
+  }
+]

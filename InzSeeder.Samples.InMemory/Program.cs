@@ -1,8 +1,8 @@
-using InzSeeder.Core.Contracts;
 using InzSeeder.Core.Extensions;
+using InzSeeder.Core.Models;
 using InzSeeder.Samples.InMemory.Data;
-using InzSeeder.Samples.InMemory.Seeders;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -13,27 +13,42 @@ class Program
     static async Task Main(string[] args)
     {
         var builder = Host.CreateApplicationBuilder(args);
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+        // or Environment.SetEnvironmentVariable("SEEDING_ENVIRONMENT", "Development");
 
         // Configure the database context
         builder.Services.AddDbContext<AppDbContext>(options =>
         {
             // Using in-memory database for this example
-            options.UseInMemoryDatabase("SampleDb");
+            options.UseInMemoryDatabase("SampleDb").ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning));
         });
 
-        // Add the seeder services
-        builder.Services.AddInzSeeder();
+        // Create seeding settings
+        var seedingSettings = new SeederConfiguration
+        {
+            Profile = new SeedingProfile
+            {
+                EnabledSeeders = ["products"],
+                StrictMode = false
+            },
+            BatchSettings = new SeederBatchSettings
+            {
+                DefaultBatchSize = 100
+            }
+        };
 
-        // Register our custom seeder
-        builder.Services.AddScoped<IEntitySeeder, ProductSeeder>();
+        // Add the seeder services with external configuration using fluent API
+        builder.Services.AddInzSeeder(seedingSettings)
+            .UseDbContext<AppDbContext>()
+            .RegisterEntitySeedersFromAssemblies(typeof(Program).Assembly)
+            .RegisterEmbeddedSeedDataFromAssemblies(typeof(Program).Assembly);
 
         var host = builder.Build();
 
         // Run the seeder
         using (var scope = host.Services.CreateScope())
         {
-            var seeder = scope.ServiceProvider.GetRequiredService<ISeedingOrchestrator>();
-            await seeder.SeedDataAsync(CancellationToken.None);
+            await scope.ServiceProvider.RunInzSeeder(CancellationToken.None);
         }
 
         Console.WriteLine("Seeding completed successfully!");

@@ -14,6 +14,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\InzSeeder.Core\InzSeeder.Core.csproj" />
+      <EmbeddedResource Include="SeedData\**\*.json" />
     </ItemGroup>
 
 </Project>

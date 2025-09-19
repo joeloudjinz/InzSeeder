@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "Electronics",
+    "slug": "electronics",
+    "isActive": true
+  },
+  {
+    "id": 2,
+    "name": "Clothing",
+    "slug": "clothing",
+    "isActive": true
+  },
+  {
+    "id": 3,
+    "name": "Books",
+    "slug": "books",
+    "isActive": false
+  }
+]

@@ -3,7 +3,7 @@ namespace InzSeeder.Core.Contracts;
 /// <summary>
 /// Represents an environment-aware seeder that can determine whether it should run in a specific environment.
 /// </summary>
-public interface IEnvironmentAwareSeeder : IEntitySeeder
+public interface IEnvironmentAwareSeeder : IBaseEntityDataSeeder
 {
     /// <summary>
     /// Determines whether this seeder should run in the specified environment.

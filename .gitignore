@@ -126,3 +126,6 @@ Assets/AssetStoreTools*
 
 # Rider
 *.sln.iml
+
+*/*.db
+*/*.db-*

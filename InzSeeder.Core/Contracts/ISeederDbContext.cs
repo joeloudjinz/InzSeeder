@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace InzSeeder.Core.Contracts;
 
-public interface ISeederDbContext
+internal interface ISeederDbContext
 {
     DatabaseFacade Database { get; }
     ChangeTracker ChangeTracker { get; }
