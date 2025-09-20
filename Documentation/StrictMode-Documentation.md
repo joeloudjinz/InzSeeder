@@ -1,4 +1,47 @@
-# InzSeeder StrictMode Documentation
+# StrictMode Documentation
+
+## Table of Contents
+- [Overview](#overview)
+- [Core Concepts](#core-concepts)
+  - [SeederConfiguration Structure](#seederconfiguration-structure)
+  - [Key Components](#key-components)
+- [How StrictMode Works](#how-strictmode-works)
+  - [StrictMode = FALSE (Default/Lenient Mode)](#strictmode--false-defaultlenient-mode)
+  - [StrictMode = TRUE (Strict Mode)](#strictmode--true-strict-mode)
+- [Working with EnabledSeeders](#working-with-enabledseeders)
+  - [Basic Configuration](#basic-configuration)
+  - [Behavior Examples](#behavior-examples)
+- [Using IEnvironmentAwareSeeder](#using-ienvironmentawarseeder)
+  - [Interface Definition](#interface-definition)
+  - [Implementation Example](#implementation-example)
+  - [Interaction with StrictMode](#interaction-with-strictmode)
+- [Using EnvironmentCompatibilityAttribute](#using-environmentcompatibilityattribute)
+  - [Attribute Definition](#attribute-definition)
+  - [Usage Examples](#usage-examples)
+  - [Logic Implementation](#logic-implementation)
+  - [Interaction with StrictMode](#interaction-with-strictmode-1)
+- [Environment-Specific JSON Files](#environment-specific-json-files)
+  - [File Naming Convention](#file-naming-convention)
+  - [Data Loading Logic](#data-loading-logic)
+  - [Interaction with Configuration](#interaction-with-configuration)
+- [Comprehensive Examples](#comprehensive-examples)
+  - [Example 1: Development Environment Configuration](#example-1-development-environment-configuration)
+  - [Example 2: Production Environment Configuration](#example-2-production-environment-configuration)
+  - [Example 3: Mixed Configuration with Custom Logic](#example-3-mixed-configuration-with-custom-logic)
+- [Best Practices](#best-practices)
+  - [1. Use StrictMode in Production](#1-use-strictmode-in-production)
+  - [2. Explicitly List All Required Seeders](#2-explicitly-list-all-required-seeders)
+  - [3. Use Attributes for Declarative Restrictions](#3-use-attributes-for-declarative-restrictions)
+  - [4. Implement Custom Logic When Needed](#4-implement-custom-logic-when-needed)
+  - [5. Organize Seed Data Files](#5-organize-seed-data-files)
+- [Common Scenarios](#common-scenarios)
+  - [Scenario 1: Adding a New Seeder](#scenario-1-adding-a-new-seeder)
+  - [Scenario 2: Environment Migration](#scenario-2-environment-migration)
+  - [Scenario 3: Troubleshooting Seeding Issues](#scenario-3-troubleshooting-seeding-issues)
+- [Advanced Configuration Patterns](#advanced-configuration-patterns)
+  - [Pattern 1: Environment-Specific Configurations](#pattern-1-environment-specific-configurations)
+  - [Pattern 2: Role-Based Seeding](#pattern-2-role-based-seeding)
+- [Summary](#summary)
 
 ## Overview
 
@@ -56,7 +99,7 @@ When StrictMode is disabled (false), the filtering process follows this logic:
 1. **Check Explicit Enablement**: If seeder is in `EnabledSeeders` list → RUN
 2. **Check Environment Awareness**: If seeder implements `IEnvironmentAwareSeeder` → Use custom logic
 3. **Check Compatibility Attributes**: If seeder has `EnvironmentCompatibilityAttribute` → Apply restrictions
-4. **Default Behavior**: If no restrictions apply → RUN
+4. **Default Behavior**: If `EnabledSeeders` is null OR seeder is in `EnabledSeeders` list → RUN
 
 ### StrictMode = TRUE (Strict Mode)
 
