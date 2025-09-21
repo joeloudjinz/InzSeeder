@@ -83,13 +83,13 @@ internal static class SeederExecutor
             return;
         }
 
-        var batchSize = seedingSettings.BatchSettings.SeederBatchSizes.ContainsKey(seedName) ? seedingSettings.BatchSettings.DefaultBatchSize : 100;
+        if (!seedingSettings.BatchSettings.SeederBatchSizes.TryGetValue(seedName, out var batchSize)) batchSize = seedingSettings.BatchSettings.DefaultBatchSize;
 
         logger.LogInformation("Processing {ModelCount} models with batch size {BatchSize}", models.Count, batchSize);
 
         var existingEntities = await dbContext.Set<TEntity>().ToListAsync(cancellationToken);
         var existingEntitiesDict = existingEntities.ToDictionary(seeder.GetBusinessKeyFromEntity, e => e);
-        
+
         var processedCount = 0;
         for (var i = 0; i < models.Count; i += batchSize)
         {
