@@ -22,6 +22,9 @@ This solution contains the following projects:
 ### InzSeeder.Core
 The main library implementation.
 
+### InzSeeder.Core.StressTest
+A comprehensive stress testing tool for the InzSeeder library that provides detailed performance metrics and analysis.
+
 ### InzSeeder.Samples.InMemory
 A sample project demonstrating usage with an in-memory database.
 
@@ -308,6 +311,14 @@ dotnet run
 cd InzSeeder.Samples.Web
 dotnet run seedMode # seedMode indicate that the web project should be ran in seed mode
 ```
+
+### Stress Test
+```bash
+cd InzSeeder.Core.StressTest
+dotnet run
+```
+
+The stress test project provides comprehensive performance metrics for the seeding process. See [InzSeeder.Core.StressTest/README.md](InzSeeder.Core.StressTest/README.md) for detailed documentation.
 
 ## Building and Testing
 
