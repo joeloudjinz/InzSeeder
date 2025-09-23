@@ -95,6 +95,7 @@ public class TestDbContextWrapper : IAsyncLifetime
         services.AddSingleton(seederConfiguration ?? new SeederConfiguration());
         services.AddLogging(builder => builder.AddConsole());
         services.AddSingleton<SeedingPerformanceMetricsService>(provider => new SeedingPerformanceMetricsService(provider.GetRequiredService<ILogger<SeedingPerformanceMetricsService>>()));
+        services.AddSingleton<IEntityReferenceResolver, EntityReferenceResolver>();
 
         // Register all seeders
         foreach (var seeder in seeders)
@@ -118,6 +119,7 @@ public class TestDbContextWrapper : IAsyncLifetime
         services.AddSingleton(seederConfiguration ?? new SeederConfiguration());
         services.AddLogging(builder => builder.AddConsole());
         services.AddSingleton<SeedingPerformanceMetricsService>(provider => new SeedingPerformanceMetricsService(provider.GetRequiredService<ILogger<SeedingPerformanceMetricsService>>()));
+        services.AddSingleton<IEntityReferenceResolver, EntityReferenceResolver>();
         return services.BuildServiceProvider();
     }
 }

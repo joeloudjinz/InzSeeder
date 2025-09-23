@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
 
         services.AddLogging(options => { options.AddConsole(); });
         services.AddSingleton(configuration ?? new SeederConfiguration());
+        services.AddScoped<IEntityReferenceResolver, EntityReferenceResolver>();
         services.AddScoped<SeedingPerformanceMetricsService>();
         services.AddScoped<SeedingProfileValidationService>();
 
