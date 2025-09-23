@@ -2,6 +2,7 @@ using System.Text.Json;
 using InzSeeder.Core.Contracts;
 using InzSeeder.Core.Models;
 using InzSeeder.Core.Services;
+using InzSeeder.Core.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -92,10 +93,10 @@ internal static class SeederExecutor
         var existingEntitiesDict = existingEntities.ToDictionary(seeder.GetBusinessKeyFromEntity, e => e);
 
         var processedCount = 0;
-        for (var i = 0; i < models.Count; i += batchSize)
+        var batchNumber = 1;
+        foreach (var batch in models.Batch(batchSize))
         {
-            var batch = models.Skip(i).Take(batchSize).ToList();
-            logger.LogInformation("Processing batch {BatchNumber} with {BatchSize} items", i / batchSize + 1, batch.Count);
+            logger.LogInformation("Processing batch {BatchNumber} with {BatchSize} items", batchNumber, batch.Count);
 
             foreach (var model in batch)
             {
@@ -122,7 +123,8 @@ internal static class SeederExecutor
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);
-            logger.LogInformation("Completed batch {BatchNumber}, processed {ProcessedCount}/{TotalCount} items", i / batchSize + 1, processedCount, models.Count);
+            logger.LogInformation("Completed batch {BatchNumber}, processed {ProcessedCount}/{TotalCount} items", batchNumber, processedCount, models.Count);
+            batchNumber++;
         }
 
         if (existingSeedHistory != null)
