@@ -20,14 +20,16 @@ public class EntityReferenceResolver : IEntityReferenceResolver
     /// <inheritdoc />
     public TEntity ResolveEntity<TEntity>(string key) where TEntity : class
     {
+        if (string.IsNullOrEmpty(key)) throw new Exception($"{nameof(key)} Is either null of an empty string");
         if (_entities.TryGetValue(key, out var entity)) return entity as TEntity ?? throw new Exception($"Failed to cast the entity to {typeof(TEntity).FullName}");
-
         throw new Exception($"Could not resolve entity with key [{key}].");
     }
 
     /// <inheritdoc />
     public TIdType ResolveEntityId<TEntity, TIdType>(string key) where TEntity : class
     {
+        if (string.IsNullOrEmpty(key)) throw new Exception($"{nameof(key)} Is either null of an empty string");
+
         var entity = ResolveEntity<TEntity>(key);
         if (entity == null) throw new Exception($"Could not resolve entity with key [{key}].");
 
@@ -37,4 +39,13 @@ public class EntityReferenceResolver : IEntityReferenceResolver
 
         return (TIdType)idProperty?.GetValue(entity)! ?? throw new Exception($"Could not resolve the identifier (id, ID, Id, _id) property for entity with key [{key}].");
     }
+
+    /// <inheritdoc />
+    public Guid ResolveGuidId<TEntity>(string key) where TEntity : class => ResolveEntityId<TEntity, Guid>(key);
+
+    /// <inheritdoc />
+    public string ResolveStringId<TEntity>(string key) where TEntity : class => ResolveEntityId<TEntity, string>(key);
+
+    /// <inheritdoc />
+    public int ResolveIntId<TEntity>(string key) where TEntity : class => ResolveEntityId<TEntity, int>(key);
 }
