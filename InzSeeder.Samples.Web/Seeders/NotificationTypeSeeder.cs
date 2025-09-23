@@ -23,14 +23,10 @@ public class NotificationTypeSeeder : IEntityDataSeeder<NotificationType, Notifi
             Description = model.Description,
             TargetAudience = model.TargetAudience,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            // Resolve the NotificationTemplate reference if provided
+            NotificationTemplateId = referenceResolver.ResolveGuidId<NotificationTemplate>(model.NotificationTemplateKey)
         };
-
-        // Resolve the NotificationTemplate reference if provided
-        if (!string.IsNullOrEmpty(model.NotificationTemplateKey))
-        {
-            entity.NotificationTemplateId = referenceResolver.ResolveEntityId<NotificationTemplate, Guid>(model.NotificationTemplateKey);
-        }
 
         return entity;
     }
@@ -44,9 +40,6 @@ public class NotificationTypeSeeder : IEntityDataSeeder<NotificationType, Notifi
         existingEntity.UpdatedAt = DateTime.UtcNow;
 
         // Resolve the NotificationTemplate reference if provided
-        if (!string.IsNullOrEmpty(model.NotificationTemplateKey))
-        {
-            existingEntity.NotificationTemplateId = referenceResolver.ResolveEntityId<NotificationTemplate, Guid>(model.NotificationTemplateKey);
-        }
+        existingEntity.NotificationTemplateId = referenceResolver.ResolveGuidId<NotificationTemplate>(model.NotificationTemplateKey);
     }
 }

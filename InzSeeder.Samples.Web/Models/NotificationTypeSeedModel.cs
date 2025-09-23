@@ -8,5 +8,5 @@ public class NotificationTypeSeedModel : IHasKeyModel
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string TargetAudience { get; set; } = string.Empty;
-    public string? NotificationTemplateKey { get; set; }
+    public string NotificationTemplateKey { get; set; }
 }
