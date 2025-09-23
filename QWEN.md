@@ -11,7 +11,8 @@ InzSeeder is a flexible, generic data seeding library for .NET applications that
 - **Dependency Management**: Handles dependencies between seeders
 - **Batch Processing**: Processes large datasets in batches for better performance
 - **Audit Logging**: Tracks all seeding operations
-- **Hash-Based Change Detection**: Only re-seeds when data changes
+- **Hash-Based Change Detection**: Uses content hashes to determine if seed data has changed
+- **Entity Reference Resolution**: Resolve references between entities created during seeding
 - **Extensible Architecture**: Easy to create custom seeders
 
 ## Project Structure
@@ -31,7 +32,7 @@ Key files and directories:
 - `Contracts/` - Interfaces defining the core contracts (IEntityDataSeeder, ISeedDataProvider, etc.)
 - `Extensions/` - Extension methods for service registration and execution
 - `Models/` - Configuration models (SeederConfiguration, SeedingProfile, etc.)
-- `Services/` - Core services (EmbeddedResourceSeedDataProvider, etc.)
+- `Services/` - Core services (EmbeddedResourceSeedDataProvider, EntityReferenceResolver, etc.)
 - `Algorithms/` - Core algorithms (EnvironmentSeedingOrchestrator, SeederExecutor, etc.)
 - `Attributes/` - Custom attributes (EnvironmentCompatibilityAttribute)
 - `Utilities/` - Utility classes (EnvironmentUtility)
@@ -65,10 +66,10 @@ A sample web project demonstrating how to use the InzSeeder library with a SQLit
 Key files and directories:
 - `Program.cs` - Sample web application entry point
 - `InzSeeder.Samples.Web.csproj` - Project configuration
-- `Models/` - Entity and seeder models
+- `Models/` - Entity and seeder models, including examples of entity reference resolution
 - `Data/` - DbContext implementation
-- `Seeders/` - Custom seeder implementations
-- `SeedData/` - JSON seed data files with environment-specific variations
+- `Seeders/` - Custom seeder implementations demonstrating entity reference resolution
+- `SeedData/` - JSON seed data files with environment-specific variations and entity references
 - `Migrations/` - EF Core migrations
 - `appsettings*.json` - Configuration files
 
@@ -125,6 +126,7 @@ dotnet run seedMode
 6. **Error Handling**: Graceful error handling with meaningful error messages
 7. **Performance**: Batch processing for large datasets to optimize performance
 8. **Environment Awareness**: Support for environment-specific seeding configurations
+9. **Entity Reference Resolution**: Use string-based keys to reference entities created during seeding
 
 ## Key Implementation Details
 
@@ -136,6 +138,7 @@ dotnet run seedMode
 6. **Seeder Profiles**: Supports different seeder configurations for different environments
 7. **Strict Mode**: Configuration option to only run explicitly enabled seeders
 8. **Environment Compatibility**: Attribute-based and interface-based environment restrictions
+9. **Entity Reference Resolution**: Allows seeders to reference entities created during seeding using string-based keys
 
 ## Extensibility Points
 
@@ -144,3 +147,4 @@ dotnet run seedMode
 3. **Custom Data Providers**: Implement `ISeedDataProvider` to load data from different sources
 4. **Custom DbContext**: Implement `ISeederDbContext` to work with custom database contexts
 5. **Seeder Dependencies**: Specify dependencies between seeders using the Dependencies property
+6. **Entity Reference Resolution**: Use `IEntityReferenceResolver` to resolve references between entities created during seeding

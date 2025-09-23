@@ -12,7 +12,7 @@ public class CategorySeeder: IEntityDataSeeder<Category, CategorySeedModel>
 
     public object GetBusinessKey(CategorySeedModel model) => model.Id;
 
-    public Category MapToEntity(CategorySeedModel model)
+    public Category MapEntity(CategorySeedModel model, IEntityReferenceResolver referenceResolver)
     {
         return new Category
         {
@@ -25,7 +25,7 @@ public class CategorySeeder: IEntityDataSeeder<Category, CategorySeedModel>
         };
     }
 
-    public void UpdateEntity(Category existingEntity, CategorySeedModel model)
+    public void UpdateEntity(Category existingEntity, CategorySeedModel model, IEntityReferenceResolver referenceResolver)
     {
         existingEntity.Name = model.Name;
         existingEntity.Slug = model.Slug;

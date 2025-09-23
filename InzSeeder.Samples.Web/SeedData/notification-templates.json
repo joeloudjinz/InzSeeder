@@ -1,0 +1,18 @@
+[
+  {
+    "Key": "welcome-template",
+    "Name": "Welcome Email Template",
+    "Subject": "Welcome to our platform!",
+    "Body": "Dear {{name}}, welcome to our platform!",
+    "DeliveryMethod": "Email",
+    "IsMasterLayout": false
+  },
+  {
+    "Key": "password-reset-template",
+    "Name": "Password Reset Template",
+    "Subject": "Password Reset Request",
+    "Body": "Click here to reset your password: {{resetLink}}",
+    "DeliveryMethod": "Email",
+    "IsMasterLayout": false
+  }
+]

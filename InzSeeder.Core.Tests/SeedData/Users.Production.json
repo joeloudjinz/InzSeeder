@@ -1,15 +1,18 @@
 [
   {
+    "Key": "prod-user-1",
     "Id": 1,
     "Email": "prod.john.doe@example.com",
     "Name": "Prod John Doe"
   },
   {
+    "Key": "prod-user-2",
     "Id": 2,
     "Email": "prod.jane.smith@example.com",
     "Name": "Prod Jane Smith"
   },
   {
+    "Key": "prod-user-3",
     "Id": 3,
     "Email": "prod.bob.wilson@example.com",
     "Name": "Prod Bob Wilson"

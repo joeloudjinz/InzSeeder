@@ -64,4 +64,18 @@ async Task DisplaySeededData(ApplicationDbContext dbContext)
     {
         Console.WriteLine($"  - {category.Id}: {category.Name} (Slug: {category.Slug}, Active: {category.IsActive})");
     }
+
+    var notificationTemplates = await dbContext.NotificationTemplates.ToListAsync();
+    Console.WriteLine($"\nNotification Templates ({notificationTemplates.Count} total):");
+    foreach (var template in notificationTemplates)
+    {
+        Console.WriteLine($"  - {template.Id}: {template.Name} (Key: {template.Key}, Method: {template.DeliveryMethod})");
+    }
+
+    var notificationTypes = await dbContext.NotificationTypes.ToListAsync();
+    Console.WriteLine($"\nNotification Types ({notificationTypes.Count} total):");
+    foreach (var type in notificationTypes)
+    {
+        Console.WriteLine($"  - {type.Id}: {type.Name} (Key: {type.Key}, Audience: {type.TargetAudience})");
+    }
 }

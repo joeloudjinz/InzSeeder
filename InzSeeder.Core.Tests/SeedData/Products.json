@@ -1,11 +1,13 @@
 [
   {
+    "Key": "product-1",
     "Id": 1,
     "Name": "Laptop",
     "Sku": "LAPTOP-001",
     "Price": 999.99
   },
   {
+    "Key": "product-2",
     "Id": 2,
     "Name": "Mouse",
     "Sku": "MOUSE-001",

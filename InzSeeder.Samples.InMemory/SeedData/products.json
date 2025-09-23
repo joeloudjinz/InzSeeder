@@ -1,15 +1,18 @@
 [
   {
+    "Key": "product-1",
     "id": 1,
     "name": "Laptop",
     "price": 999.99
   },
   {
+    "Key": "product-2",
     "id": 2,
     "name": "Mouse",
     "price": 29.99
   },
   {
+    "Key": "product-3",
     "id": 3,
     "name": "Keyboard",
     "price": 79.99

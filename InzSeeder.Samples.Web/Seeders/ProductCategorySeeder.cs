@@ -13,7 +13,7 @@ public class ProductCategorySeeder: IEntityDataSeeder<Product, ProductSeedModel>
 
     public object GetBusinessKey(ProductSeedModel model) => model.Id;
 
-    public Product MapToEntity(ProductSeedModel model)
+    public Product MapEntity(ProductSeedModel model, IEntityReferenceResolver referenceResolver)
     {
         return new Product
         {
@@ -26,7 +26,7 @@ public class ProductCategorySeeder: IEntityDataSeeder<Product, ProductSeedModel>
         };
     }
 
-    public void UpdateEntity(Product existingEntity, ProductSeedModel model)
+    public void UpdateEntity(Product existingEntity, ProductSeedModel model, IEntityReferenceResolver referenceResolver)
     {
         existingEntity.Name = $"[{model.Id}] {model.Name}";
         existingEntity.Description = model.Description;

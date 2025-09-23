@@ -1,0 +1,16 @@
+[
+  {
+    "Key": "user-registration-type",
+    "Name": "User Registration Notification",
+    "Description": "Notification sent when a new user registers",
+    "TargetAudience": "Admins",
+    "NotificationTemplateKey": "welcome-template"
+  },
+  {
+    "Key": "password-reset-type",
+    "Name": "Password Reset Notification",
+    "Description": "Notification sent when a user requests a password reset",
+    "TargetAudience": "Users",
+    "NotificationTemplateKey": "password-reset-template"
+  }
+]

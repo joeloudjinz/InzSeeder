@@ -2,6 +2,7 @@ using System.Text.Json;
 using InzSeeder.Core.Contracts;
 using InzSeeder.Core.Models;
 using InzSeeder.Core.Services;
+using InzSeeder.Core.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,6 +25,8 @@ namespace InzSeeder.Core.Algorithms;
 /// </remarks>
 internal static class SeederExecutor
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
+
     /// <summary>
     /// Executes the seeding process for a specific entity type.
     /// </summary>
@@ -42,6 +45,7 @@ internal static class SeederExecutor
     {
         var performanceMetricsService = serviceProvider.GetRequiredService<SeedingPerformanceMetricsService>();
         var logger = serviceProvider.GetRequiredService<ILogger<IEntityDataSeeder<TEntity, TModel>>>();
+        var referenceResolver = serviceProvider.GetRequiredService<IEntityReferenceResolver>();
         var seedingSettings = serviceProvider.GetRequiredService<SeederConfiguration>();
         var seedDataProvider = serviceProvider.GetRequiredService<ISeedDataProvider>();
         var dbContext = serviceProvider.GetRequiredService<ISeederDbContext>();
@@ -68,8 +72,7 @@ internal static class SeederExecutor
         List<TModel>? models;
         try
         {
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            models = JsonSerializer.Deserialize<List<TModel>>(content, options);
+            models = JsonSerializer.Deserialize<List<TModel>>(content, JsonSerializerOptions);
         }
         catch (JsonException ex)
         {
@@ -86,36 +89,40 @@ internal static class SeederExecutor
         if (!seedingSettings.BatchSettings.SeederBatchSizes.TryGetValue(seedName, out var batchSize)) batchSize = seedingSettings.BatchSettings.DefaultBatchSize;
 
         logger.LogInformation("Processing {ModelCount} models with batch size {BatchSize}", models.Count, batchSize);
-
-        var existingEntities = await dbContext.Set<TEntity>().ToListAsync(cancellationToken);
-        var existingEntitiesDict = existingEntities.ToDictionary(seeder.GetBusinessKeyFromEntity, e => e);
-
+        var existingEntitiesDict = await dbContext.Set<TEntity>().ToDictionaryAsync(seeder.GetBusinessKeyFromEntity, e => e, cancellationToken: cancellationToken);
         var processedCount = 0;
-        for (var i = 0; i < models.Count; i += batchSize)
+        var batchNumber = 1;
+        foreach (var batch in models.Batch(batchSize))
         {
-            var batch = models.Skip(i).Take(batchSize).ToList();
-            logger.LogInformation("Processing batch {BatchNumber} with {BatchSize} items", i / batchSize + 1, batch.Count);
+            logger.LogInformation("Processing batch {BatchNumber} with {BatchSize} items", batchNumber, batch.Count);
 
             foreach (var model in batch)
             {
                 var businessKey = seeder.GetBusinessKey(model);
+                TEntity entity;
+
                 if (existingEntitiesDict.TryGetValue(businessKey, out var existingEntity))
                 {
-                    seeder.UpdateEntity(existingEntity, model);
+                    seeder.UpdateEntity(existingEntity, model, referenceResolver);
+                    entity = existingEntity;
                 }
                 else
                 {
-                    var newEntity = seeder.MapToEntity(model);
+                    entity = seeder.MapEntity(model, referenceResolver);
 
-                    if (newEntity is ISystemOwnedEntity systemOwnedEntity) systemOwnedEntity.IsSystemOwned = true;
-                    await dbContext.Set<TEntity>().AddAsync(newEntity, cancellationToken);
+                    if (entity is ISystemOwnedEntity systemOwnedEntity) systemOwnedEntity.IsSystemOwned = true;
+                    await dbContext.Set<TEntity>().AddAsync(entity, cancellationToken);
                 }
+
+                // Register the entity with the reference resolver if it has a string key
+                if (model is IHasKeyModel keyModel) referenceResolver.RegisterEntity(keyModel.Key, entity);
 
                 processedCount++;
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);
-            logger.LogInformation("Completed batch {BatchNumber}, processed {ProcessedCount}/{TotalCount} items", i / batchSize + 1, processedCount, models.Count);
+            logger.LogInformation("Completed batch {BatchNumber}, processed {ProcessedCount}/{TotalCount} items", batchNumber, processedCount, models.Count);
+            batchNumber++;
         }
 
         if (existingSeedHistory != null)
