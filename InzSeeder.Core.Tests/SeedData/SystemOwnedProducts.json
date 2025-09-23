@@ -1,5 +1,6 @@
 [
   {
+    "Key": "sys-product-1",
     "Id": 1,
     "Name": "Keyboard",
     "Sku": "KEYBOARD-001",

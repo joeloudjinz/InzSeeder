@@ -1,8 +1,11 @@
+using InzSeeder.Core.Contracts;
+
 namespace InzSeeder.Core.Tests.Entities;
 
-public class UserProfileSeedModel
+public class UserProfileSeedModel : IHasKeyModel
 {
     public int Id { get; set; }
+    public string Key { get; set; } = string.Empty;
     public int UserId { get; set; }
     public string Bio { get; set; } = string.Empty;
 }

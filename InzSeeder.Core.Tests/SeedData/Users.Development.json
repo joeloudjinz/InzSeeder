@@ -1,10 +1,12 @@
 [
   {
+    "Key": "dev-user-1",
     "Id": 1,
     "Email": "dev.john.doe@example.com",
     "Name": "Dev John Doe"
   },
   {
+    "Key": "dev-user-2",
     "Id": 2,
     "Email": "dev.jane.smith@example.com",
     "Name": "Dev Jane Smith"

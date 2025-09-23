@@ -91,6 +91,7 @@ public class EndToEndIntegrationTests : IAsyncLifetime
         // Pre-populate with some existing data
         var existingUser = new User
         {
+            Key = "user-1",
             Id = 1,
             Email = "john.doe@example.com",
             Name = "John Doe (Old Name)",

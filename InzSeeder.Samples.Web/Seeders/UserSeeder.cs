@@ -12,7 +12,7 @@ public class UserSeeder: IEntityDataSeeder<User, UserSeedModel>
 
     public object GetBusinessKey(UserSeedModel model) => model.Id;
 
-    public User MapToEntity(UserSeedModel model)
+    public User MapEntity(UserSeedModel model, IEntityReferenceResolver referenceResolver)
     {
         return new User
         {
@@ -26,7 +26,7 @@ public class UserSeeder: IEntityDataSeeder<User, UserSeedModel>
         };
     }
 
-    public void UpdateEntity(User existingEntity, UserSeedModel model)
+    public void UpdateEntity(User existingEntity, UserSeedModel model, IEntityReferenceResolver referenceResolver)
     {
         existingEntity.FirstName = model.FirstName;
         existingEntity.LastName = model.LastName;

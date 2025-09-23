@@ -45,6 +45,7 @@ internal static class SeederExecutor
         var seedingSettings = serviceProvider.GetRequiredService<SeederConfiguration>();
         var seedDataProvider = serviceProvider.GetRequiredService<ISeedDataProvider>();
         var dbContext = serviceProvider.GetRequiredService<ISeederDbContext>();
+        var referenceResolver = serviceProvider.GetRequiredService<IEntityReferenceResolver>();
 
         var seedName = seeder.SeedName;
         logger.LogInformation("Starting seeder '{SeederName}'", seedName);
@@ -99,17 +100,23 @@ internal static class SeederExecutor
             foreach (var model in batch)
             {
                 var businessKey = seeder.GetBusinessKey(model);
+                TEntity entityToProcess;
+
                 if (existingEntitiesDict.TryGetValue(businessKey, out var existingEntity))
                 {
-                    seeder.UpdateEntity(existingEntity, model);
+                    seeder.UpdateEntity(existingEntity, model, referenceResolver);
+                    entityToProcess = existingEntity;
                 }
                 else
                 {
-                    var newEntity = seeder.MapToEntity(model);
+                    entityToProcess = seeder.MapEntity(model, referenceResolver);
 
-                    if (newEntity is ISystemOwnedEntity systemOwnedEntity) systemOwnedEntity.IsSystemOwned = true;
-                    await dbContext.Set<TEntity>().AddAsync(newEntity, cancellationToken);
+                    if (entityToProcess is ISystemOwnedEntity systemOwnedEntity) systemOwnedEntity.IsSystemOwned = true;
+                    await dbContext.Set<TEntity>().AddAsync(entityToProcess, cancellationToken);
                 }
+
+                // Register the entity with the reference resolver if it has a string key
+                if (model is IHasKeyModel keyModel) referenceResolver.RegisterEntity(keyModel.Key, entityToProcess);
 
                 processedCount++;
             }

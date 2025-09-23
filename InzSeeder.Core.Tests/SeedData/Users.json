@@ -1,10 +1,12 @@
 [
   {
+    "Key": "user-1",
     "Id": 1,
     "Email": "john.doe@example.com",
     "Name": "John Doe"
   },
   {
+    "Key": "user-2",
     "Id": 2,
     "Email": "jane.smith@example.com",
     "Name": "Jane Smith"

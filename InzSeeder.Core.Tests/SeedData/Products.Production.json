@@ -1,17 +1,20 @@
 [
   {
+    "Key": "prod-product-1",
     "Id": 1,
     "Name": "Enterprise Laptop",
     "Sku": "LAPTOP-001",
     "Price": 2299.99
   },
   {
+    "Key": "prod-product-2",
     "Id": 2,
     "Name": "Business Smartphone",
     "Sku": "MOUSE-001",
     "Price": 1199.99
   },
   {
+    "Key": "prod-product-3",
     "Id": 3,
     "Name": "Enterprise Tablet",
     "Sku": "TABLET-001",

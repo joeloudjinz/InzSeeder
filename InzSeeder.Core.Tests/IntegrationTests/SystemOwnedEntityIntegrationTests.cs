@@ -77,6 +77,7 @@ public class SystemOwnedEntityIntegrationTests : IAsyncLifetime
         // Pre-populate with an existing system-owned product that matches one in our seed data
         var existingProduct = new Product
         {
+            Key = "product-1",
             Id = 1,
             Name = "Old Keyboard Name",
             Sku = "LAPTOP-001", // Match the SKU from our seed data

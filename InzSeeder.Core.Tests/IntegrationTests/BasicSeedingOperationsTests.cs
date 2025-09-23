@@ -69,6 +69,7 @@ public class BasicSeedingOperationsTests : IAsyncLifetime
         // Pre-populate with existing user that matches seed data
         var existingUser = new User
         {
+            Key = "user-1",
             Id = 1,
             Email = "john.doe@example.com",
             Name = "John Doe Original"
@@ -186,9 +187,9 @@ public class BasicSeedingOperationsTests : IAsyncLifetime
             // Modified content with updated names and an additional user
             var modifiedUsers = new List<UserSeedModel>
             {
-                new() { Id = 1, Email = "john.doe@example.com", Name = "John Doe Modified" }, // Modified name
-                new() { Id = 2, Email = "jane.smith@example.com", Name = "Jane Smith Modified" }, // Modified name
-                new() { Id = 3, Email = "bob.wilson@example.com", Name = "Bob Wilson" } // New user
+                new() { Key = "user-1", Id = 1, Email = "john.doe@example.com", Name = "John Doe Modified" }, // Modified name
+                new() { Key = "user-2", Id = 2, Email = "jane.smith@example.com", Name = "Jane Smith Modified" }, // Modified name
+                new() { Key = "user-3", Id = 3, Email = "bob.wilson@example.com", Name = "Bob Wilson" } // New user
             };
 
             var json = System.Text.Json.JsonSerializer.Serialize(modifiedUsers);

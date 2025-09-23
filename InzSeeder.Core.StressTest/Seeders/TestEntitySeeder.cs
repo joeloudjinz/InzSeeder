@@ -27,7 +27,7 @@ public class TestEntitySeeder : IEntityDataSeeder<TestEntity, TestEntity>
     }
 
     /// <inheritdoc/>
-    public TestEntity MapToEntity(TestEntity model)
+    public TestEntity MapEntity(TestEntity model, IEntityReferenceResolver referenceResolver)
     {
         return new TestEntity
         {
@@ -41,7 +41,7 @@ public class TestEntitySeeder : IEntityDataSeeder<TestEntity, TestEntity>
     }
 
     /// <inheritdoc/>
-    public void UpdateEntity(TestEntity entity, TestEntity model)
+    public void UpdateEntity(TestEntity entity, TestEntity model, IEntityReferenceResolver referenceResolver)
     {
         entity.Name = model.Name;
         entity.Description = model.Description;
