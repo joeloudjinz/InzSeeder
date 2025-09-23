@@ -20,7 +20,8 @@ public interface IEntityReferenceResolver
     /// </summary>
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
     /// <param name="key">The string key associated with the entity.</param>
-    /// <returns>The resolved entity, or null if not found.</returns>
+    /// <returns>The resolved entity.</returns>
+    /// <exception cref="Exception">Thrown when the entity with the specified key cannot be found or cast to the requested type.</exception>
     TEntity ResolveEntity<TEntity>(string key) where TEntity : class;
 
     /// <summary>
@@ -29,6 +30,8 @@ public interface IEntityReferenceResolver
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
     /// <typeparam name="TIdType">The type of the id</typeparam>
     /// <param name="key">The string key associated with the entity.</param>
-    /// <returns>The ID of the resolved entity, or default value if not found.</returns>
+    /// <returns>The ID of the resolved entity.</returns>
+    /// <exception cref="Exception">Thrown when the entity with the specified key cannot be found, 
+    /// when the entity cannot be cast to the requested type, or when the entity does not have an 'Id', 'id', '_id' or 'ID' property.</exception>
     TIdType ResolveEntityId<TEntity, TIdType>(string key) where TEntity : class;
 }

@@ -33,8 +33,8 @@ public class EntityReferenceResolver : IEntityReferenceResolver
 
         // Try to get the ID property using reflection
         var entityType = typeof(TEntity);
-        var idProperty = entityType.GetProperty("Id") ?? entityType.GetProperty("ID");
+        var idProperty = entityType.GetProperty("Id") ?? entityType.GetProperty("ID") ?? entityType.GetProperty("_id") ?? entityType.GetProperty("id");
 
-        return (TIdType)idProperty?.GetValue(entity)! ?? throw new Exception($"Could not resolve 'Id' property for entity with key [{key}].");
+        return (TIdType)idProperty?.GetValue(entity)! ?? throw new Exception($"Could not resolve the identifier (id, ID, Id, _id) property for entity with key [{key}].");
     }
 }

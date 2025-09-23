@@ -13,6 +13,7 @@ InzSeeder is a flexible, generic data seeding library for .NET applications that
 - **Batch Processing**: Processes large datasets in batches for better performance
 - **Audit Logging**: Tracks all seeding operations
 - **Hash-Based Change Detection**: Only re-seeds when data changes
+- **Entity Reference Resolution**: Resolve references between entities created during seeding
 - **Extensible Architecture**: Easy to create custom seeders
 
 ## Projects
@@ -88,7 +89,7 @@ public class ProductSeedModel
 
 ### 4. Create Custom Seeders
 
-Create custom seeders by implementing `IEntityDataSeeder<TEntity, TModel>`:
+Create custom seeders by implementing `IEntityDataSeeder<TEntity, TModel>`. The new entity reference resolution feature allows you to reference entities created during seeding using string keys:
 
 ```csharp
 public class ProductSeeder : IEntityDataSeeder<Product, ProductSeedModel>
@@ -103,7 +104,7 @@ public class ProductSeeder : IEntityDataSeeder<Product, ProductSeedModel>
     // You can use other properties of different type based on your choice, like `string Key`
     public object GetBusinessKey(ProductSeedModel model) => model.Id;
 
-    public Product MapToEntity(ProductSeedModel model)
+    public Product MapEntity(ProductSeedModel model, IEntityReferenceResolver referenceResolver)
     {
         return new Product
         {
@@ -116,7 +117,7 @@ public class ProductSeeder : IEntityDataSeeder<Product, ProductSeedModel>
         };
     }
 
-    public void UpdateEntity(Product existingEntity, ProductSeedModel model)
+    public void UpdateEntity(Product existingEntity, ProductSeedModel model, IEntityReferenceResolver referenceResolver)
     {
         existingEntity.Name = model.Name;
         existingEntity.Description = model.Description;
@@ -125,6 +126,87 @@ public class ProductSeeder : IEntityDataSeeder<Product, ProductSeedModel>
     }
 }
 ```
+
+### 5. Entity Reference Resolution
+
+InzSeeder now supports entity reference resolution, allowing you to reference entities created during seeding by using string-based keys instead of hardcoded IDs. This is especially useful when you have relationships between entities that are being seeded.
+
+To use this feature:
+
+1. Make your seed models implement `IHasKeyModel` to provide a string key:
+
+```csharp
+public class ProductSeedModel : IHasKeyModel
+{
+    public string Key { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+}
+```
+
+2. In your seeder, use the `referenceResolver` parameter to resolve entity references:
+
+```csharp
+public class OrderSeeder : IEntityDataSeeder<Order, OrderSeedModel>
+{
+    public string SeedName => "orders";
+    
+    public IEnumerable<Type> Dependencies { get; } = [typeof(ProductSeeder)];
+
+    public object GetBusinessKeyFromEntity(Order entity) => entity.Id;
+    public object GetBusinessKey(OrderSeedModel model) => model.Id;
+
+    public Order MapEntity(OrderSeedModel model, IEntityReferenceResolver referenceResolver)
+    {
+        // Resolve the Product reference by its key
+        var product = referenceResolver.ResolveEntity<Product>(model.ProductKey);
+        
+        return new Order
+        {
+            Id = model.Id,
+            ProductId = product.Id,
+            Quantity = model.Quantity,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
+
+    public void UpdateEntity(Order existingEntity, OrderSeedModel model, IEntityReferenceResolver referenceResolver)
+    {
+        // Update the Product reference if needed
+        var product = referenceResolver.ResolveEntity<Product>(model.ProductKey);
+        existingEntity.ProductId = product.Id;
+        existingEntity.Quantity = model.Quantity;
+        existingEntity.UpdatedAt = DateTime.UtcNow;
+    }
+}
+```
+
+3. In your seed data JSON files, use the string keys to reference other entities:
+
+```json
+// SeedData/products.json
+[
+  {
+    "key": "laptop-product",
+    "name": "Laptop",
+    "description": "High-performance laptop",
+    "price": 999.99
+  }
+]
+
+// SeedData/orders.json
+[
+  {
+    "id": 1,
+    "productKey": "laptop-product",
+    "quantity": 2
+  }
+]
+```
+
+The entity reference resolver automatically registers entities with their keys during the seeding process, making them available for resolution by other seeders.
 
 ### 5. Prepare Seed Data
 
