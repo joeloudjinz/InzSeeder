@@ -6,7 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageId>Inz.Seeder</PackageId>
-        <PackageVersion>1.0.0</PackageVersion>
+        <PackageVersion>2.0.1</PackageVersion>
         <Authors>Abdellah Addoun</Authors>
         <Company>Inz Softwares</Company>
         <Product>Inz Seeder</Product>
