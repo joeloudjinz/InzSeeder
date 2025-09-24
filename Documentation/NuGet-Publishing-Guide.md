@@ -11,7 +11,9 @@ The repository includes a GitHub Actions workflow that packs and publishes the N
 The workflow is triggered only manually through the GitHub Actions interface for safety:
 1. Go to the "Actions" tab in your repository
 2. Select "Publish NuGet Package" workflow
-3. Click "Run workflow" and confirm
+3. Click "Run workflow"
+4. In the input field, specify the version tag to use for package naming
+5. Click "Run workflow" to confirm
 
 ### Workflow Steps
 
@@ -19,8 +21,9 @@ The workflow is triggered only manually through the GitHub Actions interface for
 2. **Restore**: Restores all project dependencies
 3. **Build**: Builds the solution in Release configuration
 4. **Pack**: Creates the NuGet package from the InzSeeder.Core project
-5. **Login**: Uses trusted publishing to obtain a temporary API key
-6. **Publish**: Publishes the package to NuGet.org using the temporary API key
+5. **Extract Version**: Extracts the version from the input tag (removing the 'v' prefix)
+6. **Login**: Uses trusted publishing to obtain a temporary API key
+7. **Publish**: Publishes the package to NuGet.org using the temporary API key and the version from the input
 
 ## Publishing a New Version
 
@@ -42,10 +45,11 @@ To publish a new version of the NuGet package:
    git push
    ```
 
-3. Trigger the workflow manually:
+3. Trigger the workflow manually with the correct version tag:
    - Go to the "Actions" tab in your repository
    - Select "Publish NuGet Package" workflow
-   - Click "Run workflow" and confirm
+   - Enter the version tag in the input field
+   - Click "Run workflow" to confirm
 
 ## Trusted Publishing Setup
 
@@ -81,5 +85,5 @@ To pack and publish locally, you'll still need a traditional API key:
 
 3. Publish the package:
    ```bash
-   dotnet nuget push bin/Release/Inz.Seeder.2.0.0.nupkg --api-key YOUR_API_KEY --source https://api.nuget.org/v3/index.json
+   dotnet nuget push artifacts/my-sdk.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
    ```
