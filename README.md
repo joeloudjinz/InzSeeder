@@ -37,7 +37,7 @@ To get started with InzSeeder, you can either:
 
 1. Add the NuGet package to your project:
    ```bash
-   dotnet add package Inz.Seeder
+   dotnet add package InzSoftwares.NetSeeder
    ```
 
 2. Or clone this repository and explore the sample projects:
@@ -53,7 +53,7 @@ To get started with InzSeeder, you can either:
 Add the InzSeeder NuGet package to your project:
 
 ```bash
-dotnet add package Inz.Seeder
+dotnet add package InzSoftwares.NetSeeder
 ```
 
 ### 2. Create Your Data Models
