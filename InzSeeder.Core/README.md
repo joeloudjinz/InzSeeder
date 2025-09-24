@@ -1,6 +1,6 @@
-# InzSeeder
+# InzSoftwares.NetSeeder
 
-InzSeeder is a flexible, generic data seeding library for .NET applications that can be used to seed any database with initial data.
+A flexible, generic data seeding library for .NET applications that can be used to seed any database with initial data.
 
 ## Features
 

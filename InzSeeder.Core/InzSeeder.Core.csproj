@@ -5,11 +5,15 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <PackageId>Inz.Seeder</PackageId>
-        <PackageVersion>2.0.2</PackageVersion>
+        <PackageId>InzSoftwares.NetSeeder</PackageId>
+        <PackageVersion>2.0.3</PackageVersion>
         <Authors>Abdellah Addoun</Authors>
         <Company>Inz Softwares</Company>
-        <Product>Inz Seeder</Product>
+        <Product>.NET Data Seeder</Product>
+        <RepositoryUrl>https://github.com/joeloudjinz/InzSeeder</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <Copyright>Copyright (c) Abdellah Addoun (joe-inz) 2025</Copyright>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <Description>
             A powerful and flexible data seeding library for .NET applications, designed to streamline the process of populating databases with test
             or initial data. It supports environment-specific data, dependency management between seeders, batch processing for large datasets,
@@ -36,6 +40,7 @@
     </PropertyGroup>
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\"/>
+        <None Include="LICENSE" Pack="true" PackagePath="\"/>
     </ItemGroup>
-    
+
 </Project>
