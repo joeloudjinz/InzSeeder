@@ -2,8 +2,6 @@
 
 InzSeeder is a flexible, generic data seeding library for .NET applications that can be used to seed any database with initial data.
 
-[![Full Unit Tests](https://github.com/joeloudjinz/InzSeeder/actions/workflows/run-tests.yml/badge.svg)](https://github.com/joeloudjinz/InzSeeder/actions/workflows/run-tests.yml)
-
 ## Features
 
 - **Generic Design**: Works with any Entity Framework Core DbContext
@@ -15,48 +13,9 @@ InzSeeder is a flexible, generic data seeding library for .NET applications that
 - **Entity Reference Resolution**: Resolve references between entities created during seeding
 - **Extensible Architecture**: Easy to create custom seeders
 
-## Projects
+## Usage Guide
 
-This solution contains the following projects:
-
-### InzSeeder.Core
-The main library implementation.
-
-### InzSeeder.Core.StressTest
-A comprehensive stress testing tool for the InzSeeder library that provides detailed performance metrics and analysis.
-
-### InzSeeder.Samples.InMemory
-A sample project demonstrating usage with an in-memory database.
-
-### InzSeeder.Samples.Web
-A sample project demonstrating usage with a SQLite database in a web application.
-
-## Quick Start
-
-To get started with InzSeeder, you can either:
-
-1. Add the NuGet package to your project:
-   ```bash
-   dotnet add package Inz.Seeder
-   ```
-
-2. Or clone this repository and explore the sample projects:
-   ```bash
-   git clone https://github.com/joeloudjinz/InzSeeder.git
-   cd InzSeeder
-   ```
-
-## Detailed Usage Guide
-
-### 1. Installation
-
-Add the InzSeeder NuGet package to your project:
-
-```bash
-dotnet add package Inz.Seeder
-```
-
-### 2. Create Your Data Models
+### 1. Create Your Data Models
 
 First, create your entity models that represent the data you want to seed:
 
@@ -72,7 +31,7 @@ public class Product
 }
 ```
 
-### 3. Create Seed Data Models
+### 2. Create Seed Data Models
 
 Create corresponding seed data models that match your JSON data structure:
 
@@ -86,7 +45,7 @@ public class ProductSeedModel
 }
 ```
 
-### 4. Create Custom Seeders
+### 3. Create Custom Seeders
 
 Create custom seeders by implementing `IEntityDataSeeder<TEntity, TModel>`. The new entity reference resolution feature allows you to reference entities created during seeding using string keys:
 
@@ -126,9 +85,9 @@ public class ProductSeeder : IEntityDataSeeder<Product, ProductSeedModel>
 }
 ```
 
-### 5. Entity Reference Resolution
+### 4. Entity Reference Resolution
 
-InzSeeder now supports entity reference resolution, allowing you to reference entities created during seeding by using string-based keys instead of hardcoded IDs. This is especially useful when you have relationships between entities that are being seeded.
+InzSeeder supports entity reference resolution, allowing you to reference entities created during seeding by using string-based keys instead of hardcoded IDs. This is especially useful when you have relationships between entities that are being seeded.
 
 To use this feature:
 
@@ -379,57 +338,9 @@ public class ProductSeeder : IEntityDataSeeder<Product, ProductSeedModel>
 }
 ```
 
-## Running the Sample Projects
-
-### InMemory Sample
-```bash
-cd InzSeeder.Samples.InMemory
-dotnet run
-```
-
-### Web Sample
-```bash
-cd InzSeeder.Samples.Web
-dotnet run seedMode # seedMode indicate that the web project should be ran in seed mode
-```
-
-### Stress Test
-```bash
-cd InzSeeder.Core.StressTest
-dotnet run Large # You can use arguments: Small, Medium, Large, ExtraLarge
-```
-
-The stress test project provides comprehensive performance metrics for the seeding process. See [InzSeeder.Core.StressTest/README.md](InzSeeder.Core.StressTest/README.md) for detailed documentation.
-
-## Building and Testing
-
-To build the solution:
-```bash
-dotnet build
-```
-
-To run tests:
-```bash
-dotnet test
-```
-
-To package as NuGet:
-```bash
-cd InzSeeder.Core
-dotnet pack
-```
-
 ## Best Practices
 
 1. **Use Business Keys**: Always implement proper business key identification in your seeders. They must be unique in value.
 2. **Environment Awareness**: Use environment-specific configurations for different deployment scenarios if necessary.
 3. **Batch Processing**: Configure appropriate batch sizes for large datasets if necessary.
 4. **Idempotency**: Design your seeders to be idempotent so they can be safely run multiple times.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](InzSeeder.Core/LICENSE) file for details.
